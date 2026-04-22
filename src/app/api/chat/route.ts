@@ -47,7 +47,7 @@ async function proxyAnthropic(
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6-20250515',
       max_tokens: 1024,
       system: systemPrompt,
       messages,
