@@ -28,8 +28,9 @@ Linear four-step wizard. Navigation is forward-only with back option. Steps:
 - Chat interface where the AI career coach asks questions about the user's background, experience, interests, and goals
 - Driven by a customizable system prompt that instructs the AI to:
   - Ask ~8-10 questions covering career history, skills, interests, deal-breakers, and aspirations
-  - Signal when it has gathered enough information (e.g., by including a specific marker in its response)
-- The app detects the AI's "ready" signal and shows a "Continue to Rankings" button
+  - Include a `[READY]` marker in its response when it has gathered enough information
+- A "Continue to Rankings" button is always visible in subtle/secondary styling so the user never feels trapped
+- When the app detects `[READY]` in an AI response, it strips the marker from displayed text and promotes the button to prominent/highlighted styling
 - Chat history is preserved in state for use in the results step
 
 ### Step 3: A/B Ranking (`/rank`)
