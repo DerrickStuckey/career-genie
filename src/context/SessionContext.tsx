@@ -25,7 +25,7 @@ const DEFAULT_ITEMS = [
 const defaultRankingState: RankingState = {
   items: DEFAULT_ITEMS,
   completedComparisons: 0,
-  totalEstimatedComparisons: Math.ceil(DEFAULT_ITEMS.length * Math.log2(DEFAULT_ITEMS.length)),
+  totalEstimatedComparisons: 3 * Math.floor(DEFAULT_ITEMS.length / 2),
   currentPair: null,
   sortedResult: null,
 };

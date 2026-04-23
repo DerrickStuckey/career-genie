@@ -1,77 +1,91 @@
-type CompareResult = -1 | 1;
-
-// A yielded comparison request from the generator
-interface CompareRequest {
-  a: string;
-  b: string;
+interface ItemState {
+  name: string;
+  score: number;
+  opponentScores: number[];
+  hadBye: boolean;
 }
 
-// Generator-based merge sort that yields comparison requests
-function* mergeSortGen(arr: string[], left: number, right: number): Generator<CompareRequest, void, CompareResult> {
-  if (left >= right) return;
-  const mid = Math.floor((left + right) / 2);
-  yield* mergeSortGen(arr, left, mid);
-  yield* mergeSortGen(arr, mid + 1, right);
-  yield* mergeGen(arr, left, mid, right);
-}
+const TOTAL_ROUNDS = 3;
 
-function* mergeGen(arr: string[], left: number, mid: number, right: number): Generator<CompareRequest, void, CompareResult> {
-  const leftArr = arr.slice(left, mid + 1);
-  const rightArr = arr.slice(mid + 1, right + 1);
-
-  let i = 0, j = 0, k = left;
-
-  while (i < leftArr.length && j < rightArr.length) {
-    const result: CompareResult = yield { a: leftArr[i], b: rightArr[j] };
-    if (result === -1) {
-      arr[k++] = leftArr[i++];
-    } else {
-      arr[k++] = rightArr[j++];
-    }
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-
-  while (i < leftArr.length) arr[k++] = leftArr[i++];
-  while (j < rightArr.length) arr[k++] = rightArr[j++];
+  return a;
 }
 
 export class RankingEngine {
-  private arr: string[];
+  private items: ItemState[];
+  private round = 1;
+  private matchIndex = 0;
+  private roundPairings: Array<[number, number]> = [];
   private completedCount = 0;
   private totalEstimate: number;
   private result: string[] | null = null;
   private currentPair: [string, string] | null = null;
   private done = false;
-  private gen: Generator<CompareRequest, void, CompareResult> | null = null;
 
-  constructor(items: string[]) {
-    this.arr = [...items];
-    this.totalEstimate = items.length <= 1 ? 0 : Math.ceil(items.length * Math.log2(items.length));
-
-    if (items.length <= 1) {
-      this.result = [...items];
+  constructor(names: string[]) {
+    if (names.length <= 1) {
+      this.items = names.map((name) => ({ name, score: 0, opponentScores: [], hadBye: false }));
+      this.totalEstimate = 0;
+      this.result = [...names];
       this.done = true;
-    } else {
-      this.gen = mergeSortGen(this.arr, 0, this.arr.length - 1);
-      // Advance to the first comparison
-      this.advance(undefined);
+      return;
     }
+
+    this.items = shuffle(names).map((name) => ({
+      name,
+      score: 0,
+      opponentScores: [],
+      hadBye: false,
+    }));
+
+    this.totalEstimate = TOTAL_ROUNDS * Math.floor(this.items.length / 2);
+    this.generateRoundPairings();
+    this.currentPair = this.pairAtIndex(0);
   }
 
-  private advance(result: CompareResult | undefined): void {
-    if (!this.gen) return;
+  private generateRoundPairings(): void {
+    const sorted = this.items
+      .map((item, idx) => ({ idx, score: item.score }))
+      .sort((a, b) => b.score - a.score);
 
-    const next = result === undefined
-      ? this.gen.next()
-      : this.gen.next(result);
+    this.roundPairings = [];
+    const paired = new Set<number>();
 
-    if (next.done) {
-      this.done = true;
-      this.result = [...this.arr];
-      this.currentPair = null;
-      this.gen = null;
-    } else {
-      this.currentPair = [next.value.a, next.value.b];
+    // Handle bye for odd-count lists
+    if (sorted.length % 2 === 1) {
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        if (!this.items[sorted[i].idx].hadBye) {
+          this.items[sorted[i].idx].hadBye = true;
+          paired.add(sorted[i].idx);
+          break;
+        }
+      }
+      // If everyone has had a bye, reset and pick lowest again
+      if (paired.size === 0) {
+        for (const item of this.items) item.hadBye = false;
+        const lastIdx = sorted[sorted.length - 1].idx;
+        this.items[lastIdx].hadBye = true;
+        paired.add(lastIdx);
+      }
     }
+
+    // Pair adjacent items by score
+    const unpaired = sorted.filter((s) => !paired.has(s.idx));
+    for (let i = 0; i + 1 < unpaired.length; i += 2) {
+      this.roundPairings.push([unpaired[i].idx, unpaired[i + 1].idx]);
+    }
+
+    this.matchIndex = 0;
+  }
+
+  private pairAtIndex(idx: number): [string, string] {
+    const [a, b] = this.roundPairings[idx];
+    return [this.items[a].name, this.items[b].name];
   }
 
   getCurrentPair(): [string, string] | null {
@@ -79,11 +93,44 @@ export class RankingEngine {
   }
 
   recordChoice(winner: string): void {
-    if (!this.currentPair) return;
+    if (!this.currentPair || this.done) return;
 
-    const result: CompareResult = winner === this.currentPair[0] ? -1 : 1;
+    const [aIdx, bIdx] = this.roundPairings[this.matchIndex];
+    const winnerIdx = this.items[aIdx].name === winner ? aIdx : bIdx;
+    const loserIdx = winnerIdx === aIdx ? bIdx : aIdx;
+
+    this.items[winnerIdx].score++;
+    this.items[winnerIdx].opponentScores.push(this.items[loserIdx].score);
+    this.items[loserIdx].opponentScores.push(this.items[winnerIdx].score);
+
     this.completedCount++;
-    this.advance(result);
+    this.matchIndex++;
+
+    if (this.matchIndex >= this.roundPairings.length) {
+      this.round++;
+      if (this.round > TOTAL_ROUNDS) {
+        this.finish();
+        return;
+      }
+      this.generateRoundPairings();
+    }
+
+    if (!this.done) {
+      this.currentPair = this.pairAtIndex(this.matchIndex);
+    }
+  }
+
+  private finish(): void {
+    this.done = true;
+    this.currentPair = null;
+    this.result = [...this.items]
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        const aStrength = a.opponentScores.reduce((s, v) => s + v, 0);
+        const bStrength = b.opponentScores.reduce((s, v) => s + v, 0);
+        return bStrength - aStrength;
+      })
+      .map((item) => item.name);
   }
 
   isComplete(): boolean {
