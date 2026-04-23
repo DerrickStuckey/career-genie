@@ -5,23 +5,21 @@ import type { SessionState, SessionAction, RankingState } from '@/types';
 import { INTAKE_SYSTEM_PROMPT } from '@/lib/prompts';
 
 const DEFAULT_ITEMS = [
-  'High salary / compensation',
+  'High base compensation',
   'Flexible hours',
   'Remote work options',
-  'Real-world impact',
+  'Tangible real-world impact',
   'Career growth opportunities',
-  'Strong team culture',
-  'Autonomy / independence',
+  'Great co-workers',
+  'Autonomy / creative freedom',
   'Job stability / security',
-  'Desirable location',
-  'Company prestige / brand',
+  'Prestige (impresses people)',
   'Work-life balance',
-  'Mentorship opportunities',
-  'Creative freedom',
+  'Learning valuable skills',
   'Leadership opportunities',
-  'Mission-driven organization',
-  'Technical challenge',
-  'Equity / ownership stake',
+  'A mission which is important to you',
+  'Intellectually challenging',
+  'Equity / financial upside',
 ];
 
 const defaultRankingState: RankingState = {
