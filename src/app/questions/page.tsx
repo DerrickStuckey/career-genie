@@ -9,6 +9,8 @@ import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
 import { WizardNav } from '@/components/WizardNav';
 
+const NEXT_MARKER = '[NEXT]';
+
 export default function QuestionsPage() {
   const { state, dispatch } = useSession();
   const router = useRouter();
@@ -57,11 +59,18 @@ export default function QuestionsPage() {
         setStreamingContent(content);
       }
 
+      const hasNext = content.includes(NEXT_MARKER);
+      const cleanContent = content.replace(NEXT_MARKER, '').trim();
+
       dispatch({
         type: 'ADD_QUESTION_MESSAGE',
         questionId: currentQuestionIndex,
-        message: { role: 'assistant', content },
+        message: { role: 'assistant', content: cleanContent },
       });
+
+      if (hasNext) {
+        advanceQuestion();
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Something went wrong';
       dispatch({
@@ -75,7 +84,7 @@ export default function QuestionsPage() {
     }
   }
 
-  function handleNextQuestion() {
+  function advanceQuestion() {
     dispatch({ type: 'SET_QUESTION_COMPLETE', questionId: currentQuestionIndex });
     if (isLastQuestion) {
       dispatch({ type: 'SET_WIZARD_STEP', step: 'hub' });
@@ -109,7 +118,7 @@ export default function QuestionsPage() {
         <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4 space-y-3">
           <ChatInput onSend={handleSend} disabled={streaming} placeholder="Type your answer..." />
           <button
-            onClick={handleNextQuestion}
+            onClick={advanceQuestion}
             disabled={!hasUserMessage || streaming}
             className={`w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
               hasUserMessage && !streaming
