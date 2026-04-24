@@ -4,7 +4,7 @@ import { createContext, useContext, useReducer, type ReactNode, type Dispatch } 
 import type { SessionState, SessionAction, RankingState } from '@/types';
 const DEFAULT_ITEMS = [
   'High base compensation',
-  'Flexible hours',
+  'Work-life balance / flexible hours',
   'Remote work options',
   'Tangible real-world impact',
   'Career growth opportunities',
@@ -12,7 +12,6 @@ const DEFAULT_ITEMS = [
   'Autonomy / creative freedom',
   'Job stability / security',
   'Prestige (impresses people)',
-  'Work-life balance',
   'Learning valuable skills',
   'Leadership opportunities',
   'A mission which is important to you',
