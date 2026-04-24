@@ -38,8 +38,8 @@ export default function SetupPage() {
         throw new Error(body.error || `Validation failed (${response.status})`);
       }
 
-      dispatch({ type: 'SET_WIZARD_STEP', step: 'chat' });
-      router.push('/chat');
+      dispatch({ type: 'SET_WIZARD_STEP', step: 'hub' });
+      router.push('/hub');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to validate API key.');
     } finally {
