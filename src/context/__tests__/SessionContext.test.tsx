@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sessionReducer, initialState, areQuestionsComplete, isRankingComplete, isStep3Available } from '../SessionContext';
+import { sessionReducer, initialState, areQuestionsComplete, isStep3Available } from '../SessionContext';
 
 describe('sessionReducer', () => {
   it('sets provider', () => {

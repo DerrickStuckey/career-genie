@@ -11,41 +11,20 @@ import { WizardNav } from '@/components/WizardNav';
 export default function RankPage() {
   const { state, dispatch } = useSession();
   const router = useRouter();
-  const engineRef = useRef<RankingEngine | null>(null);
-  const [currentPair, setCurrentPair] = useState<[string, string] | null>(null);
-  const [completed, setCompleted] = useState(0);
-  const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    if (state.wizardStep !== 'rank') {
-      router.replace('/');
-      return;
-    }
-
+  const [engineState] = useState(() => {
     const engine = new RankingEngine(state.rankingState.items);
-    engineRef.current = engine;
-    setTotal(engine.getTotalEstimate());
+    return {
+      engine,
+      total: engine.getTotalEstimate(),
+      initialPair: engine.isComplete() ? null : engine.getCurrentPair(),
+    };
+  });
 
-    if (engine.isComplete()) {
-      finishRanking(engine);
-    } else {
-      setCurrentPair(engine.getCurrentPair());
-    }
-  }, []);
-
-  function handleChoice(winner: string) {
-    const engine = engineRef.current;
-    if (!engine) return;
-
-    engine.recordChoice(winner);
-    setCompleted(engine.getCompletedCount());
-
-    if (engine.isComplete()) {
-      finishRanking(engine);
-    } else {
-      setCurrentPair(engine.getCurrentPair());
-    }
-  }
+  const engineRef = useRef(engineState.engine);
+  const [currentPair, setCurrentPair] = useState(engineState.initialPair);
+  const [completed, setCompleted] = useState(0);
+  const total = engineState.total;
 
   function finishRanking(engine: RankingEngine) {
     const result = engine.getResult();
@@ -59,6 +38,32 @@ export default function RankPage() {
       });
       dispatch({ type: 'SET_WIZARD_STEP', step: 'hub' });
       router.push('/hub');
+    }
+  }
+
+  useEffect(() => {
+    if (state.wizardStep !== 'rank') {
+      router.replace('/');
+      return;
+    }
+
+    if (engineRef.current.isComplete()) {
+      finishRanking(engineRef.current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleChoice(winner: string) {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    engine.recordChoice(winner);
+    setCompleted(engine.getCompletedCount());
+
+    if (engine.isComplete()) {
+      finishRanking(engine);
+    } else {
+      setCurrentPair(engine.getCurrentPair());
     }
   }
 

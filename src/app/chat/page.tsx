@@ -19,22 +19,6 @@ export default function ChatPage() {
 
   const rankedQualities = state.rankingState.sortedResult || [];
 
-  useEffect(() => {
-    if (!isStep3Available(state)) {
-      router.replace(state.wizardStep === 'setup' ? '/' : '/hub');
-      return;
-    }
-
-    if (!initializedRef.current && state.chatMessages.length === 0) {
-      initializedRef.current = true;
-      generateInitialAdvice();
-    }
-  }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [state.chatMessages, streamingContent]);
-
   async function generateInitialAdvice() {
     setStreaming(true);
     let content = '';
@@ -69,6 +53,23 @@ export default function ChatPage() {
       setStreamingContent('');
     }
   }
+
+  useEffect(() => {
+    if (!isStep3Available(state)) {
+      router.replace(state.wizardStep === 'setup' ? '/' : '/hub');
+      return;
+    }
+
+    if (!initializedRef.current && state.chatMessages.length === 0) {
+      initializedRef.current = true;
+      generateInitialAdvice();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [state.chatMessages, streamingContent]);
 
   async function handleSend(text: string) {
     const userMessage = { role: 'user' as const, content: text };
