@@ -57,8 +57,8 @@ export default function RankPage() {
           completedComparisons: engine.getCompletedCount(),
         },
       });
-      dispatch({ type: 'SET_WIZARD_STEP', step: 'results' });
-      router.push('/results');
+      dispatch({ type: 'SET_WIZARD_STEP', step: 'hub' });
+      router.push('/hub');
     }
   }
 
