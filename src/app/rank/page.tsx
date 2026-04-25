@@ -11,10 +11,35 @@ import { WizardNav } from '@/components/WizardNav';
 export default function RankPage() {
   const { state, dispatch } = useSession();
   const router = useRouter();
-  const engineRef = useRef<RankingEngine | null>(null);
-  const [currentPair, setCurrentPair] = useState<[string, string] | null>(null);
+
+  const [engineState] = useState(() => {
+    const engine = new RankingEngine(state.rankingState.items);
+    return {
+      engine,
+      total: engine.getTotalEstimate(),
+      initialPair: engine.isComplete() ? null : engine.getCurrentPair(),
+    };
+  });
+
+  const engineRef = useRef(engineState.engine);
+  const [currentPair, setCurrentPair] = useState(engineState.initialPair);
   const [completed, setCompleted] = useState(0);
-  const [total, setTotal] = useState(0);
+  const total = engineState.total;
+
+  function finishRanking(engine: RankingEngine) {
+    const result = engine.getResult();
+    if (result) {
+      dispatch({
+        type: 'SET_RANKING_STATE',
+        rankingState: {
+          sortedResult: result,
+          completedComparisons: engine.getCompletedCount(),
+        },
+      });
+      dispatch({ type: 'SET_WIZARD_STEP', step: 'hub' });
+      router.push('/hub');
+    }
+  }
 
   useEffect(() => {
     if (state.wizardStep !== 'rank') {
@@ -22,15 +47,10 @@ export default function RankPage() {
       return;
     }
 
-    const engine = new RankingEngine(state.rankingState.items);
-    engineRef.current = engine;
-    setTotal(engine.getTotalEstimate());
-
-    if (engine.isComplete()) {
-      finishRanking(engine);
-    } else {
-      setCurrentPair(engine.getCurrentPair());
+    if (engineRef.current.isComplete()) {
+      finishRanking(engineRef.current);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleChoice(winner: string) {
@@ -44,21 +64,6 @@ export default function RankPage() {
       finishRanking(engine);
     } else {
       setCurrentPair(engine.getCurrentPair());
-    }
-  }
-
-  function finishRanking(engine: RankingEngine) {
-    const result = engine.getResult();
-    if (result) {
-      dispatch({
-        type: 'SET_RANKING_STATE',
-        rankingState: {
-          sortedResult: result,
-          completedComparisons: engine.getCompletedCount(),
-        },
-      });
-      dispatch({ type: 'SET_WIZARD_STEP', step: 'results' });
-      router.push('/results');
     }
   }
 
