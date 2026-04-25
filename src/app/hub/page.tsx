@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, areQuestionsComplete, isRankingComplete, isStep3Available } from '@/context/SessionContext';
+import { buildExportText, downloadTextFile } from '@/lib/export';
 import { WizardNav } from '@/components/WizardNav';
 
 export default function HubPage() {
@@ -19,6 +20,7 @@ export default function HubPage() {
   const rankingComplete = isRankingComplete(state);
   const chatAvailable = isStep3Available(state);
   const questionsAnswered = state.questionResponses.filter((qr) => qr.isComplete).length;
+  const hasAnyData = questionsAnswered > 0 || rankingComplete;
 
   function goToQuestions() {
     dispatch({ type: 'SET_WIZARD_STEP', step: 'questions' });
@@ -33,6 +35,16 @@ export default function HubPage() {
   function goToChat() {
     dispatch({ type: 'SET_WIZARD_STEP', step: 'chat' });
     router.push('/chat');
+  }
+
+  function handleDownload() {
+    const text = buildExportText(
+      state.questionResponses,
+      state.rankingState.sortedResult,
+    );
+    if (text) {
+      downloadTextFile(text, 'career-genie-results.txt');
+    }
   }
 
   return (
@@ -110,6 +122,15 @@ export default function HubPage() {
           >
             {chatAvailable ? 'Continue to Career Chat' : 'Complete both steps to continue'}
           </button>
+
+          {hasAnyData && (
+            <button
+              onClick={handleDownload}
+              className="w-full rounded-xl py-2.5 text-sm font-medium text-gray-600 border border-gray-300 hover:border-gray-400 hover:text-gray-800 transition-colors"
+            >
+              Download My Results
+            </button>
+          )}
         </div>
       </div>
     </main>
