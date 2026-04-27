@@ -41,9 +41,11 @@ export const initialState: SessionState = {
   questionResponses: PREDEFINED_QUESTIONS.map((q, i) => ({
     questionId: i,
     question: q,
-    messages: [],
+    answer: '',
+    whyAnswer: '',
     isComplete: false,
   })),
+  resumeText: '',
   chatMessages: [],
   systemPrompt: '',
   rankingState: defaultRankingState,
@@ -60,15 +62,12 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       return { ...state, wizardStep: action.step };
     case 'ADD_CHAT_MESSAGE':
       return { ...state, chatMessages: [...state.chatMessages, action.message] };
-    case 'ADD_QUESTION_MESSAGE':
-      return {
-        ...state,
-        questionResponses: state.questionResponses.map((qr) =>
-          qr.questionId === action.questionId
-            ? { ...qr, messages: [...qr.messages, action.message] }
-            : qr
-        ),
-      };
+    case 'SET_QUESTION_ANSWER':
+      return { ...state, questionResponses: state.questionResponses.map((qr) => qr.questionId === action.questionId ? { ...qr, answer: action.answer } : qr) };
+    case 'SET_QUESTION_WHY':
+      return { ...state, questionResponses: state.questionResponses.map((qr) => qr.questionId === action.questionId ? { ...qr, whyAnswer: action.whyAnswer } : qr) };
+    case 'SET_RESUME_TEXT':
+      return { ...state, resumeText: action.resumeText };
     case 'SET_QUESTION_COMPLETE':
       return {
         ...state,
