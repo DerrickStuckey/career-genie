@@ -24,7 +24,7 @@ export default function ChatPage() {
     let content = '';
 
     try {
-      const contextMessages = buildChatContextMessages(state.questionResponses, rankedQualities);
+      const contextMessages = buildChatContextMessages(state.questionResponses, rankedQualities, state.resumeText);
       for await (const chunk of sendMessage({
         provider: state.provider,
         apiKey: state.apiKey,
@@ -55,8 +55,8 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    if (!isStep3Available(state)) {
-      router.replace(state.wizardStep === 'setup' ? '/' : '/hub');
+    if (!isStep3Available(state) || !state.apiKey) {
+      router.replace(state.wizardStep === 'setup' ? '/' : '/next-steps');
       return;
     }
 
