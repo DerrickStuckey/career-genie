@@ -3,13 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/context/SessionContext';
-import { sendMessage } from '@/lib/llm-client';
-import { buildQuestionSystemPrompt } from '@/lib/prompts';
-import { ChatMessage } from '@/components/ChatMessage';
-import { ChatInput } from '@/components/ChatInput';
 import { WizardNav } from '@/components/WizardNav';
 
-const NEXT_MARKER = '[NEXT]';
+type Phase = 'answer' | 'why';
 
 export default function QuestionsPage() {
   const { state, dispatch } = useSession();
@@ -18,13 +14,12 @@ export default function QuestionsPage() {
     const firstIncomplete = state.questionResponses.findIndex((qr) => !qr.isComplete);
     return firstIncomplete >= 0 ? firstIncomplete : 0;
   });
-  const [streaming, setStreaming] = useState(false);
-  const [streamingContent, setStreamingContent] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<Phase>('answer');
+  const [inputValue, setInputValue] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const currentQuestion = state.questionResponses[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === state.questionResponses.length - 1;
-  const hasUserMessage = currentQuestion.messages.some((m) => m.role === 'user');
 
   useEffect(() => {
     if (state.wizardStep === 'setup') {
@@ -33,55 +28,37 @@ export default function QuestionsPage() {
   }, [state.wizardStep, router]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentQuestion.messages, streamingContent]);
+    textareaRef.current?.focus();
+  }, [currentQuestionIndex, phase]);
 
-  async function handleSend(text: string) {
-    const userMessage = { role: 'user' as const, content: text };
-    dispatch({
-      type: 'ADD_QUESTION_MESSAGE',
-      questionId: currentQuestionIndex,
-      message: userMessage,
-    });
-
-    const allMessages = [...currentQuestion.messages, userMessage];
-    setStreaming(true);
-    let content = '';
-
-    try {
-      for await (const chunk of sendMessage({
-        provider: state.provider,
-        apiKey: state.apiKey,
-        systemPrompt: buildQuestionSystemPrompt(currentQuestion.question),
-        messages: allMessages,
-      })) {
-        content += chunk;
-        setStreamingContent(content);
-      }
-
-      const hasNext = content.includes(NEXT_MARKER);
-      const cleanContent = content.replace(NEXT_MARKER, '').trim();
-
-      dispatch({
-        type: 'ADD_QUESTION_MESSAGE',
-        questionId: currentQuestionIndex,
-        message: { role: 'assistant', content: cleanContent },
-      });
-
-      if (hasNext) {
-        advanceQuestion();
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Something went wrong';
-      dispatch({
-        type: 'ADD_QUESTION_MESSAGE',
-        questionId: currentQuestionIndex,
-        message: { role: 'assistant', content: `Error: ${errorMsg}` },
-      });
-    } finally {
-      setStreaming(false);
-      setStreamingContent('');
+  useEffect(() => {
+    if (currentQuestion.answer && phase === 'answer') {
+      setInputValue(currentQuestion.answer);
+    } else if (currentQuestion.whyAnswer && phase === 'why') {
+      setInputValue(currentQuestion.whyAnswer);
+    } else {
+      setInputValue('');
     }
+  }, [currentQuestionIndex, phase, currentQuestion.answer, currentQuestion.whyAnswer]);
+
+  function handleSubmitAnswer() {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+    dispatch({ type: 'SET_QUESTION_ANSWER', questionId: currentQuestionIndex, answer: trimmed });
+    setInputValue('');
+    setPhase('why');
+  }
+
+  function handleSubmitWhy() {
+    const trimmed = inputValue.trim();
+    if (trimmed) {
+      dispatch({ type: 'SET_QUESTION_WHY', questionId: currentQuestionIndex, whyAnswer: trimmed });
+    }
+    advanceQuestion();
+  }
+
+  function handleSkipWhy() {
+    advanceQuestion();
   }
 
   function advanceQuestion() {
@@ -91,6 +68,19 @@ export default function QuestionsPage() {
       router.push('/hub');
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setPhase('answer');
+      setInputValue('');
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (phase === 'answer') {
+        handleSubmitAnswer();
+      } else {
+        handleSubmitWhy();
+      }
     }
   }
 
@@ -105,29 +95,65 @@ export default function QuestionsPage() {
           <h2 className="text-lg font-semibold text-gray-900">{currentQuestion.question}</h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4 space-y-1">
-          {currentQuestion.messages.map((msg, i) => (
-            <ChatMessage key={i} message={msg} />
-          ))}
-          {streaming && streamingContent && (
-            <ChatMessage message={{ role: 'assistant', content: streamingContent }} />
+        <div className="flex-1 flex flex-col justify-center py-8 space-y-6">
+          {phase === 'answer' && (
+            <>
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your answer..."
+                rows={4}
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              />
+              <button
+                onClick={handleSubmitAnswer}
+                disabled={!inputValue.trim()}
+                className={`w-full rounded-xl py-3 text-sm font-medium transition-all ${
+                  inputValue.trim()
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Continue
+              </button>
+            </>
           )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4 space-y-3">
-          <ChatInput onSend={handleSend} disabled={streaming} placeholder="Type your answer..." />
-          <button
-            onClick={advanceQuestion}
-            disabled={!hasUserMessage || streaming}
-            className={`w-full rounded-xl py-2.5 text-sm font-medium transition-all ${
-              hasUserMessage && !streaming
-                ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            {isLastQuestion ? 'Finish Questions' : 'Next Question →'}
-          </button>
+          {phase === 'why' && (
+            <>
+              <div className="bg-blue-50 rounded-xl p-4">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Your answer:</span> {currentQuestion.answer}
+                </p>
+              </div>
+              <p className="text-base font-medium text-gray-900">Why?</p>
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Tell us why... (optional)"
+                rows={3}
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSkipWhy}
+                  className="flex-1 rounded-xl py-3 text-sm font-medium text-gray-600 border border-gray-300 hover:border-gray-400 transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={handleSubmitWhy}
+                  className="flex-1 rounded-xl py-3 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  {isLastQuestion ? 'Finish Questions' : 'Next Question'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </main>
