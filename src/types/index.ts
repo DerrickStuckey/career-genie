@@ -1,6 +1,6 @@
 export type Provider = 'anthropic' | 'openai';
 
-export type WizardStep = 'setup' | 'hub' | 'questions' | 'rank' | 'chat';
+export type WizardStep = 'setup' | 'hub' | 'questions' | 'rank' | 'next-steps' | 'chat';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -10,7 +10,8 @@ export interface ChatMessage {
 export interface QuestionResponse {
   questionId: number;
   question: string;
-  messages: ChatMessage[];
+  answer: string;
+  whyAnswer: string;
   isComplete: boolean;
 }
 
@@ -27,6 +28,7 @@ export interface SessionState {
   apiKey: string;
   wizardStep: WizardStep;
   questionResponses: QuestionResponse[];
+  resumeText: string;
   chatMessages: ChatMessage[];
   systemPrompt: string;
   rankingState: RankingState;
@@ -38,8 +40,10 @@ export type SessionAction =
   | { type: 'SET_API_KEY'; apiKey: string }
   | { type: 'SET_WIZARD_STEP'; step: WizardStep }
   | { type: 'ADD_CHAT_MESSAGE'; message: ChatMessage }
-  | { type: 'ADD_QUESTION_MESSAGE'; questionId: number; message: ChatMessage }
+  | { type: 'SET_QUESTION_ANSWER'; questionId: number; answer: string }
+  | { type: 'SET_QUESTION_WHY'; questionId: number; whyAnswer: string }
   | { type: 'SET_QUESTION_COMPLETE'; questionId: number }
   | { type: 'SET_RANKING_STATE'; rankingState: Partial<RankingState> }
+  | { type: 'SET_RESUME_TEXT'; resumeText: string }
   | { type: 'SET_RESULTS'; results: string }
   | { type: 'RESET' };
