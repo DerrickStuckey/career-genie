@@ -156,32 +156,36 @@ export default function NextStepsPage() {
             </div>
 
             {/* Option B: Take Your Results */}
-            <div className="rounded-2xl border-2 border-gray-200 p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">Take Your Results</h2>
-              <p className="text-sm text-gray-500">
-                Download your results or copy a prompt to use in your preferred AI chat tool.
-              </p>
-
-              <div className="space-y-3 pt-2">
-                <button
-                  onClick={handleDownloadMarkdown}
-                  className="w-full rounded-xl py-3 text-sm font-medium text-gray-700 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-colors"
-                >
-                  Download as Markdown (.md)
-                </button>
-
+            <div className="flex flex-col gap-6">
+              <div className="flex-1 rounded-2xl border-2 border-gray-200 p-6 flex flex-col justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Copy Prompt</h2>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Copy a ready-made prompt to use in ChatGPT, Claude, or any AI chat tool.
+                  </p>
+                </div>
                 <button
                   onClick={handleCopyPrompt}
-                  className="w-full rounded-xl py-3 text-sm font-medium text-gray-700 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-colors"
+                  className="w-full rounded-xl py-3 text-sm font-medium text-gray-700 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-colors mt-4"
                 >
                   {copied ? 'Copied!' : 'Copy Prompt to Clipboard'}
                 </button>
               </div>
 
-              <p className="text-xs text-gray-400">
-                The copied prompt works with ChatGPT, Claude, or any AI chat tool. The .md file
-                can be re-uploaded to Career Genie in the future to continue your session.
-              </p>
+              <div className="flex-1 rounded-2xl border-2 border-gray-200 p-6 flex flex-col justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Download Results</h2>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Download your results as Markdown. Re-upload to Career Genie later to continue your session.
+                  </p>
+                </div>
+                <button
+                  onClick={handleDownloadMarkdown}
+                  className="w-full rounded-xl py-3 text-sm font-medium text-gray-700 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-colors mt-4"
+                >
+                  Download as Markdown (.md)
+                </button>
+              </div>
             </div>
           </div>
         </div>
