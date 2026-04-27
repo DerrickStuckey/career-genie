@@ -161,7 +161,7 @@ export default function NextStepsPage() {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Copy Prompt</h2>
                   <p className="mt-2 text-sm text-gray-500">
-                    Copy a ready-made prompt to use in ChatGPT, Claude, or any AI chat tool.
+                    Continue your coaching session in ChatGPT, Claude, Gemini, or any other AI chat tool. This prompt includes all your answers and rankings as context.
                   </p>
                 </div>
                 <button
@@ -176,7 +176,7 @@ export default function NextStepsPage() {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Download Results</h2>
                   <p className="mt-2 text-sm text-gray-500">
-                    Download your results as Markdown. Re-upload to Career Genie later to continue your session.
+                    Download your answers and rankings in Markdown format.
                   </p>
                 </div>
                 <button

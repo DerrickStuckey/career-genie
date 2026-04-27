@@ -26,8 +26,8 @@ export default function WelcomePage() {
           <div className="space-y-3">
             <p className="text-sm text-gray-500">
               You&apos;ll answer 5 reflection questions and rank your career
-              priorities. Then start an open-ended conversation in this app
-              or in your AI Chat app of choice.
+              priorities. Then start an open-ended coaching session in
+              this app or in your AI Chat app of choice.
             </p>
             <button
               onClick={handleStart}
