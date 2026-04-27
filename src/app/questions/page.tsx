@@ -16,10 +16,23 @@ export default function QuestionsPage() {
   });
   const [phase, setPhase] = useState<Phase>('answer');
   const [inputValue, setInputValue] = useState('');
+  const [prevInputKey, setPrevInputKey] = useState('0-answer');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const currentQuestion = state.questionResponses[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === state.questionResponses.length - 1;
+
+  const inputKey = `${currentQuestionIndex}-${phase}`;
+  if (prevInputKey !== inputKey) {
+    setPrevInputKey(inputKey);
+    if (currentQuestion.answer && phase === 'answer') {
+      setInputValue(currentQuestion.answer);
+    } else if (currentQuestion.whyAnswer && phase === 'why') {
+      setInputValue(currentQuestion.whyAnswer);
+    } else {
+      setInputValue('');
+    }
+  }
 
   useEffect(() => {
     if (state.wizardStep === 'setup') {
@@ -30,16 +43,6 @@ export default function QuestionsPage() {
   useEffect(() => {
     textareaRef.current?.focus();
   }, [currentQuestionIndex, phase]);
-
-  useEffect(() => {
-    if (currentQuestion.answer && phase === 'answer') {
-      setInputValue(currentQuestion.answer);
-    } else if (currentQuestion.whyAnswer && phase === 'why') {
-      setInputValue(currentQuestion.whyAnswer);
-    } else {
-      setInputValue('');
-    }
-  }, [currentQuestionIndex, phase, currentQuestion.answer, currentQuestion.whyAnswer]);
 
   function handleSubmitAnswer() {
     const trimmed = inputValue.trim();
