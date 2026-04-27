@@ -4,9 +4,9 @@ import { useSession, areQuestionsComplete, isRankingComplete } from '@/context/S
 import type { WizardStep } from '@/types';
 
 const STEPS: { key: string; label: string }[] = [
-  { key: 'setup', label: 'Setup' },
+  { key: 'welcome', label: 'Welcome' },
   { key: 'discover', label: 'Discover' },
-  { key: 'chat', label: 'Career Chat' },
+  { key: 'results', label: 'Results' },
 ];
 
 function getStepIndex(wizardStep: WizardStep): number {
