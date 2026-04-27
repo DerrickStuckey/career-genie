@@ -98,7 +98,7 @@ export default function QuestionsPage() {
           <h2 className="text-lg font-semibold text-gray-900">{currentQuestion.question}</h2>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center py-8 space-y-6">
+        <div className="py-6 space-y-6">
           {phase === 'answer' && (
             <>
               <textarea

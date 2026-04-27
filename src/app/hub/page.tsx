@@ -108,7 +108,7 @@ export default function HubPage() {
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            {chatAvailable ? 'See Your Results' : 'Complete both steps to continue'}
+            {chatAvailable ? 'Proceed to Coaching' : 'Complete both steps to continue'}
           </button>
         </div>
       </div>
