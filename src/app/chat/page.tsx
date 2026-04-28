@@ -7,7 +7,7 @@ import { sendMessage } from '@/lib/llm-client';
 import { buildChatSystemPrompt, CHAT_KICKOFF_MESSAGE } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
-import { WizardNav } from '@/components/WizardNav';
+
 
 export default function ChatPage() {
   const { state, dispatch } = useSession();
@@ -106,7 +106,7 @@ export default function ChatPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex max-w-5xl mx-auto w-full px-4 gap-6 py-4">
         <aside className="w-64 shrink-0 hidden md:block">
           <div className="sticky top-4 bg-white rounded-2xl border border-gray-200 p-4">

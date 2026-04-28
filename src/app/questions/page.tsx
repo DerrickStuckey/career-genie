@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/context/SessionContext';
-import { WizardNav } from '@/components/WizardNav';
+
 
 type Phase = 'answer' | 'why';
 
@@ -89,7 +89,7 @@ export default function QuestionsPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4">
         <div className="py-4 border-b border-gray-200">
           <p className="text-sm text-gray-500 mb-1">

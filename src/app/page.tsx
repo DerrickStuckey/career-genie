@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, PREDEFINED_QUESTIONS } from '@/context/SessionContext';
 import { parseExportMarkdown } from '@/lib/import';
-import { WizardNav } from '@/components/WizardNav';
+
 
 export default function WelcomePage() {
   const { dispatch } = useSession();
@@ -56,7 +56,7 @@ export default function WelcomePage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-md space-y-6 text-center">
           <h1 className="text-3xl font-bold text-gray-900">Career Genie</h1>

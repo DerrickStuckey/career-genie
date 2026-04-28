@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, areQuestionsComplete, isRankingComplete, isStep3Available } from '@/context/SessionContext';
-import { WizardNav } from '@/components/WizardNav';
+
 
 export default function HubPage() {
   const { state, dispatch } = useSession();
@@ -37,7 +37,7 @@ export default function HubPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-lg space-y-6">
           <div className="text-center">

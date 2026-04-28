@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, isStep3Available } from '@/context/SessionContext';
 import { buildExportMarkdown, buildCopyablePrompt, downloadTextFile } from '@/lib/export';
-import { WizardNav } from '@/components/WizardNav';
+
 import type { Provider } from '@/types';
 
 export default function NextStepsPage() {
@@ -73,7 +73,7 @@ export default function NextStepsPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-2xl space-y-8">
           <div className="text-center">
