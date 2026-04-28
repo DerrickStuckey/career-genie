@@ -84,6 +84,24 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       };
     case 'SET_RESULTS':
       return { ...state, results: action.results };
+    case 'RESTORE_SESSION': {
+      const rankingState: RankingState = action.sortedResult
+        ? {
+            items: defaultRankingState.items,
+            completedComparisons: 3 * Math.floor(action.sortedResult.length / 2),
+            totalEstimatedComparisons: 3 * Math.floor(action.sortedResult.length / 2),
+            currentPair: null,
+            sortedResult: action.sortedResult,
+          }
+        : defaultRankingState;
+
+      return {
+        ...initialState,
+        questionResponses: action.questionResponses,
+        rankingState,
+        wizardStep: 'hub',
+      };
+    }
     case 'RESET':
       return initialState;
     default:
