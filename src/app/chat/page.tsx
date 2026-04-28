@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, isStep3Available } from '@/context/SessionContext';
 import { sendMessage } from '@/lib/llm-client';
-import { CHAT_SYSTEM_PROMPT, buildChatContextMessages } from '@/lib/prompts';
+import { buildChatSystemPrompt, CHAT_KICKOFF_MESSAGE } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
 import { WizardNav } from '@/components/WizardNav';
@@ -18,26 +18,24 @@ export default function ChatPage() {
   const initializedRef = useRef(false);
 
   const rankedQualities = state.rankingState.sortedResult || [];
+  const systemPrompt = buildChatSystemPrompt(state.questionResponses, rankedQualities, state.resumeText);
 
   async function generateInitialAdvice() {
     setStreaming(true);
     let content = '';
 
     try {
-      const contextMessages = buildChatContextMessages(state.questionResponses, rankedQualities, state.resumeText);
       for await (const chunk of sendMessage({
         provider: state.provider,
         apiKey: state.apiKey,
-        systemPrompt: CHAT_SYSTEM_PROMPT,
-        messages: contextMessages,
+        systemPrompt,
+        messages: [CHAT_KICKOFF_MESSAGE],
       })) {
         content += chunk;
         setStreamingContent(content);
       }
 
-      for (const msg of contextMessages) {
-        dispatch({ type: 'ADD_CHAT_MESSAGE', message: msg });
-      }
+      dispatch({ type: 'ADD_CHAT_MESSAGE', message: CHAT_KICKOFF_MESSAGE });
       dispatch({
         type: 'ADD_CHAT_MESSAGE',
         message: { role: 'assistant', content },
@@ -83,7 +81,7 @@ export default function ChatPage() {
       for await (const chunk of sendMessage({
         provider: state.provider,
         apiKey: state.apiKey,
-        systemPrompt: CHAT_SYSTEM_PROMPT,
+        systemPrompt,
         messages: allMessages,
       })) {
         content += chunk;
@@ -129,7 +127,7 @@ export default function ChatPage() {
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 overflow-y-auto space-y-1">
             {state.chatMessages
-              .filter((msg) => !(msg.role === 'user' && msg.content.startsWith('Here are my answers')))
+              .filter((msg) => !(msg.role === 'user' && msg.content === CHAT_KICKOFF_MESSAGE.content))
               .map((msg, i) => (
                 <ChatMessage key={i} message={msg} />
               ))}
