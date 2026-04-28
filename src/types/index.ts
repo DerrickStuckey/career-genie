@@ -46,4 +46,5 @@ export type SessionAction =
   | { type: 'SET_RANKING_STATE'; rankingState: Partial<RankingState> }
   | { type: 'SET_RESUME_TEXT'; resumeText: string }
   | { type: 'SET_RESULTS'; results: string }
+  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null }
   | { type: 'RESET' };

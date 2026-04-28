@@ -60,6 +60,44 @@ describe('sessionReducer', () => {
     state = sessionReducer(state, { type: 'RESET' });
     expect(state).toEqual(initialState);
   });
+
+  it('restores session with questions and rankings', () => {
+    const questionResponses = initialState.questionResponses.map((qr, i) =>
+      i === 0 ? { ...qr, answer: 'Travel', whyAnswer: 'Freedom', isComplete: true } : qr
+    );
+    const sortedResult = ['Salary', 'Growth', 'Balance'];
+
+    const state = sessionReducer(initialState, {
+      type: 'RESTORE_SESSION',
+      questionResponses,
+      sortedResult,
+    });
+
+    expect(state.wizardStep).toBe('hub');
+    expect(state.questionResponses[0].answer).toBe('Travel');
+    expect(state.questionResponses[0].isComplete).toBe(true);
+    expect(state.questionResponses[1].isComplete).toBe(false);
+    expect(state.rankingState.sortedResult).toEqual(sortedResult);
+    expect(state.apiKey).toBe('');
+    expect(state.chatMessages).toEqual([]);
+  });
+
+  it('restores session with null rankings', () => {
+    const questionResponses = initialState.questionResponses.map((qr, i) =>
+      i === 0 ? { ...qr, answer: 'Travel', isComplete: true } : qr
+    );
+
+    const state = sessionReducer(initialState, {
+      type: 'RESTORE_SESSION',
+      questionResponses,
+      sortedResult: null,
+    });
+
+    expect(state.wizardStep).toBe('hub');
+    expect(state.questionResponses[0].answer).toBe('Travel');
+    expect(state.rankingState.sortedResult).toBeNull();
+    expect(state.rankingState.items).toEqual(initialState.rankingState.items);
+  });
 });
 
 describe('derived state helpers', () => {
