@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseExportMarkdown } from '../import';
 import { buildExportMarkdown } from '../export';
-import type { QuestionResponse } from '@/types';
-
 const PREDEFINED_QUESTIONS = [
   "What would you do if you didn't have to work for a living?",
   "What would you do career-wise if you knew you wouldn't fail?",
@@ -10,17 +8,6 @@ const PREDEFINED_QUESTIONS = [
   "What was the most fun you ever had while working? Follow-up: Why?",
   "What could you stay excited about for a decade?",
 ];
-
-// Helper to make a full QuestionResponse set (defaults)
-function makeDefaultResponses(): QuestionResponse[] {
-  return PREDEFINED_QUESTIONS.map((q, i) => ({
-    questionId: i,
-    question: q,
-    answer: '',
-    whyAnswer: '',
-    isComplete: false,
-  }));
-}
 
 // A minimal valid exported markdown
 const VALID_MARKDOWN = `---
