@@ -90,7 +90,7 @@ export default function QuestionsPage() {
   return (
     <main className="min-h-screen flex flex-col">
 
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4">
+      <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full px-4">
         <div className="py-4 border-b border-stone-200">
           <p className="text-sm text-stone-500 mb-1">
             Question {currentQuestionIndex + 1} of {state.questionResponses.length}
