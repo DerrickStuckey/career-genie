@@ -43,7 +43,7 @@ export function SmokeTrailNav() {
       </nav>
 
       {/* Mobile top bar */}
-      <nav className="md:hidden flex items-center justify-center gap-3 py-3 px-4 border-b border-gray-200">
+      <nav className="md:hidden flex items-center justify-center gap-3 py-3 px-4 border-b border-stone-200">
         <Image src="/lamp.png" alt="Career Genie" width={32} height={20} className="w-8 h-auto" />
         {coaching ? (
           <div className="transition-opacity duration-700 opacity-100">

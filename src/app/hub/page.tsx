@@ -41,8 +41,8 @@ export default function HubPage() {
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-lg space-y-6">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Your Career Discovery</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-2xl font-bold text-stone-900">Your Career Discovery</h1>
+            <p className="mt-2 text-stone-600">
               Complete both steps below in any order to unlock your personalized coaching session.
             </p>
           </div>
@@ -51,23 +51,23 @@ export default function HubPage() {
             onClick={goToQuestions}
             className={`w-full text-left rounded-2xl border-2 p-6 transition-colors ${
               questionsComplete
-                ? 'border-green-300 bg-green-50'
-                : 'border-gray-200 bg-white hover:border-blue-300'
+                ? 'border-emerald-300 bg-emerald-50'
+                : 'border-stone-200 bg-white hover:border-emerald-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Reflection Questions</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-lg font-semibold text-stone-900">Reflection Questions</h2>
+                <p className="text-sm text-stone-500 mt-1">
                   {questionsComplete
                     ? 'All questions answered'
                     : `${questionsAnswered} of 5 questions answered`}
                 </p>
               </div>
               {questionsComplete ? (
-                <span className="text-green-600 text-sm font-medium">Complete</span>
+                <span className="text-emerald-600 text-sm font-medium">Complete</span>
               ) : (
-                <span className="text-blue-600 text-sm font-medium">
+                <span className="text-emerald-600 text-sm font-medium">
                   {questionsAnswered > 0 ? 'Continue' : 'Start'} &rarr;
                 </span>
               )}
@@ -78,23 +78,23 @@ export default function HubPage() {
             onClick={goToRanking}
             className={`w-full text-left rounded-2xl border-2 p-6 transition-colors ${
               rankingComplete
-                ? 'border-green-300 bg-green-50'
-                : 'border-gray-200 bg-white hover:border-blue-300'
+                ? 'border-emerald-300 bg-emerald-50'
+                : 'border-stone-200 bg-white hover:border-emerald-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Priority Ranking</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-lg font-semibold text-stone-900">Priority Ranking</h2>
+                <p className="text-sm text-stone-500 mt-1">
                   {rankingComplete
                     ? 'Rankings complete'
                     : 'Rank what matters most in your career'}
                 </p>
               </div>
               {rankingComplete ? (
-                <span className="text-green-600 text-sm font-medium">Complete</span>
+                <span className="text-emerald-600 text-sm font-medium">Complete</span>
               ) : (
-                <span className="text-blue-600 text-sm font-medium">Start &rarr;</span>
+                <span className="text-emerald-600 text-sm font-medium">Start &rarr;</span>
               )}
             </div>
           </button>
@@ -104,8 +104,8 @@ export default function HubPage() {
             disabled={!chatAvailable}
             className={`w-full rounded-xl py-3 text-sm font-medium transition-all ${
               chatAvailable
-                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md'
+                : 'bg-stone-100 text-stone-400 cursor-not-allowed'
             }`}
           >
             {chatAvailable ? 'Proceed to Coaching' : 'Complete both steps to continue'}
