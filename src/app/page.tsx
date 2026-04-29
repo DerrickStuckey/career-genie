@@ -72,7 +72,7 @@ export default function WelcomePage() {
             </p>
             <button
               onClick={handleStart}
-              className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+              className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
             >
               Get Started
             </button>

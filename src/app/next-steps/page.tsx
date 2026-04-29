@@ -102,7 +102,7 @@ export default function NextStepsPage() {
                       onClick={() => dispatch({ type: 'SET_PROVIDER', provider: p })}
                       className={`flex-1 rounded-xl py-2 text-sm font-medium border transition-colors ${
                         state.provider === p
-                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          ? 'bg-emerald-500 text-white border-emerald-600'
                           : 'bg-white text-stone-700 border-stone-300 hover:border-stone-400'
                       }`}
                     >
@@ -145,7 +145,7 @@ export default function NextStepsPage() {
               <button
                 onClick={validateAndStartChat}
                 disabled={validating}
-                className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 transition-colors"
               >
                 {validating ? 'Validating...' : 'Start Career Chat'}
               </button>

@@ -8,7 +8,7 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
       <div
         className={`max-w-[80%] rounded-2xl px-4 py-3 ${
           isUser
-            ? 'bg-emerald-600 text-white'
+            ? 'bg-emerald-500 text-white'
             : 'bg-white text-stone-900 border border-stone-200'
         }`}
       >

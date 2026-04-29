@@ -32,7 +32,7 @@ export function ChatInput({ onSend, disabled, placeholder = 'Type a message...' 
       <button
         type="submit"
         disabled={disabled || !text.trim()}
-        className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 disabled:hover:bg-emerald-600 transition-colors"
+        className="rounded-xl bg-emerald-500 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50 disabled:hover:bg-emerald-500 transition-colors"
       >
         Send
       </button>

@@ -115,7 +115,7 @@ export default function QuestionsPage() {
                 disabled={!inputValue.trim()}
                 className={`w-full rounded-xl py-3 text-sm font-medium transition-all ${
                   inputValue.trim()
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                     : 'bg-stone-100 text-stone-400 cursor-not-allowed'
                 }`}
               >
@@ -150,7 +150,7 @@ export default function QuestionsPage() {
                 </button>
                 <button
                   onClick={handleSubmitWhy}
-                  className="flex-1 rounded-xl py-3 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  className="flex-1 rounded-xl py-3 text-sm font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
                 >
                   {isLastQuestion ? 'Finish Questions' : 'Next Question'}
                 </button>

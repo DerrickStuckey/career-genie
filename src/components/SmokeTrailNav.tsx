@@ -17,20 +17,20 @@ export function SmokeTrailNav() {
   return (
     <>
       {/* Desktop sidebar */}
-      <nav className="hidden md:flex sticky top-0 h-screen w-24 shrink-0 flex-col items-center justify-center overflow-hidden">
+      <nav className="hidden md:flex sticky top-0 h-screen w-24 shrink-0 flex-col items-center justify-center overflow-visible">
         {coaching ? (
-          <div className="transition-opacity duration-700 opacity-100">
-            <Image src="/genie.png" alt="" width={56} height={96} className="w-14 h-auto" />
+          <div className="transition-opacity duration-700 opacity-100 translate-x-10">
+            <Image src="/genie.png" alt="" width={80} height={136} className="w-20 h-auto" />
           </div>
         ) : (
           <>
             {/* Puff 2: ranking complete */}
-            <div className={`transition-all duration-500 ${rankingComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
+            <div className={`translate-x-10 transition-all duration-500 ${rankingComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
               <Image src="/smoke-puff.png" alt="" width={36} height={60} className="w-9 h-auto" />
             </div>
 
             {/* Puff 1: questions complete */}
-            <div className={`transition-all duration-500 ${questionsComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
+            <div className={`translate-x-10 transition-all duration-500 ${questionsComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
               <Image src="/smoke-puff.png" alt="" width={36} height={60} className="w-9 h-auto" />
             </div>
           </>
@@ -38,16 +38,16 @@ export function SmokeTrailNav() {
 
         {/* Lamp (bottom) — always visible */}
         <div className="mt-1">
-          <Image src="/lamp.png" alt="Career Genie" width={64} height={40} className="w-16 h-auto" />
+          <Image src="/lamp.png" alt="Career Genie" width={88} height={56} className="w-22 h-auto" />
         </div>
       </nav>
 
       {/* Mobile top bar */}
       <nav className="md:hidden flex items-center justify-center gap-3 py-3 px-4 border-b border-stone-200">
-        <Image src="/lamp.png" alt="Career Genie" width={32} height={20} className="w-8 h-auto" />
+        <Image src="/lamp.png" alt="Career Genie" width={48} height={30} className="w-12 h-auto" />
         {coaching ? (
           <div className="transition-opacity duration-700 opacity-100">
-            <Image src="/genie.png" alt="" width={20} height={32} className="w-5 h-auto" />
+            <Image src="/genie.png" alt="" width={32} height={52} className="w-8 h-auto" />
           </div>
         ) : (
           <>

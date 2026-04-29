@@ -104,7 +104,7 @@ export default function HubPage() {
             disabled={!chatAvailable}
             className={`w-full rounded-xl py-3 text-sm font-medium transition-all ${
               chatAvailable
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md'
+                ? 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-md'
                 : 'bg-stone-100 text-stone-400 cursor-not-allowed'
             }`}
           >
