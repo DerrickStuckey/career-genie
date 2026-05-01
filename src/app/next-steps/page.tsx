@@ -77,9 +77,9 @@ export default function NextStepsPage() {
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-2xl space-y-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-stone-900">Your Results Are Ready</h1>
+            <h1 className="text-2xl font-bold text-stone-900">Your Genie Awaits</h1>
             <p className="mt-2 text-stone-600">
-              Choose how you&apos;d like to continue with your career insights.
+              Choose an option below to continue.
             </p>
           </div>
 
@@ -88,7 +88,7 @@ export default function NextStepsPage() {
             <div className="rounded-2xl border-2 border-stone-200 p-6 space-y-4">
               <h2 className="text-lg font-semibold text-stone-900">Continue In-App</h2>
               <p className="text-sm text-stone-500">
-                Get personalized AI coaching based on your answers and priorities.
+                Get personalized coaching based on your answers, rankings, and resume.
               </p>
 
               <div>

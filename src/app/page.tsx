@@ -87,6 +87,8 @@ export default function WelcomePage() {
               className="text-sm text-emerald-600 hover:text-emerald-700 underline cursor-pointer"
             >
               Resume a previous session
+              <br />
+              <span className="text-xs text-stone-500 no-underline">(by uploading a .md file from a previous session)</span>
             </button>
             <input
               ref={fileInputRef}
