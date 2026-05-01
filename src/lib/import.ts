@@ -3,6 +3,7 @@ import type { QuestionResponse } from '@/types';
 export interface ImportResult {
   questionResponses: QuestionResponse[];
   rankedQualities: string[] | null;
+  resumeText: string;
   warnings: string[];
 }
 
@@ -122,5 +123,13 @@ export function parseExportMarkdown(
     }
   }
 
-  return { questionResponses, rankedQualities, warnings };
+  // --- 4. Parse resume ---
+
+  let resumeText = '';
+  const resumeMatch = body.match(/## Resume\n\n([\s\S]*?)(?=\n## |\n*$)/);
+  if (resumeMatch) {
+    resumeText = resumeMatch[1].trim();
+  }
+
+  return { questionResponses, rankedQualities, resumeText, warnings };
 }

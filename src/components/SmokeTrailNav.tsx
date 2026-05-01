@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useSession, areQuestionsComplete, isRankingComplete } from '@/context/SessionContext';
+import { useSession, areQuestionsComplete, isRankingComplete, isResumeComplete } from '@/context/SessionContext';
 import type { WizardStep } from '@/types';
 
 function isCoachingStage(step: WizardStep): boolean {
@@ -12,6 +12,7 @@ export function SmokeTrailNav({ side = 'left' }: { side?: 'left' | 'right' }) {
   const { state } = useSession();
   const questionsComplete = areQuestionsComplete(state);
   const rankingComplete = isRankingComplete(state);
+  const resumeComplete = isResumeComplete(state);
   const coaching = isCoachingStage(state.wizardStep);
 
   const mirrored = side === 'right';
@@ -28,6 +29,11 @@ export function SmokeTrailNav({ side = 'left' }: { side?: 'left' | 'right' }) {
           </div>
         ) : (
           <>
+            {/* Puff 3: resume complete */}
+            <div className={`${offsetClass} transition-all duration-500 ${resumeComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
+              <Image src="/smoke-puff.png" alt="" width={36} height={60} className={`w-9 h-auto ${flipClass}`} />
+            </div>
+
             {/* Puff 2: ranking complete */}
             <div className={`${offsetClass} transition-all duration-500 ${rankingComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
               <Image src="/smoke-puff.png" alt="" width={36} height={60} className={`w-9 h-auto ${flipClass}`} />
@@ -60,6 +66,9 @@ export function SmokeTrailNav({ side = 'left' }: { side?: 'left' | 'right' }) {
                 <Image src="/smoke-puff.png" alt="" width={24} height={40} className="w-6 h-auto" />
               </div>
               <div className={`transition-all duration-500 ${rankingComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
+                <Image src="/smoke-puff.png" alt="" width={24} height={40} className="w-6 h-auto" />
+              </div>
+              <div className={`transition-all duration-500 ${resumeComplete ? 'opacity-100' : 'opacity-30 grayscale'}`}>
                 <Image src="/smoke-puff.png" alt="" width={24} height={40} className="w-6 h-auto" />
               </div>
             </>

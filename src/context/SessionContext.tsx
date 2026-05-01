@@ -99,6 +99,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         ...initialState,
         questionResponses: action.questionResponses,
         rankingState,
+        resumeText: action.resumeText || '',
         wizardStep: 'hub',
       };
     }
@@ -137,6 +138,10 @@ export function isRankingComplete(state: SessionState): boolean {
   return state.rankingState.sortedResult !== null;
 }
 
-export function isStep3Available(state: SessionState): boolean {
-  return areQuestionsComplete(state) && isRankingComplete(state);
+export function isResumeComplete(state: SessionState): boolean {
+  return state.resumeText.trim().length > 0;
+}
+
+export function areAllStepsComplete(state: SessionState): boolean {
+  return areQuestionsComplete(state) && isRankingComplete(state) && isResumeComplete(state);
 }

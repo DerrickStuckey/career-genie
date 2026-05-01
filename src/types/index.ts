@@ -1,6 +1,6 @@
 export type Provider = 'anthropic' | 'openai';
 
-export type WizardStep = 'setup' | 'hub' | 'questions' | 'rank' | 'next-steps' | 'chat';
+export type WizardStep = 'setup' | 'hub' | 'questions' | 'rank' | 'resume' | 'next-steps' | 'chat';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -46,5 +46,5 @@ export type SessionAction =
   | { type: 'SET_RANKING_STATE'; rankingState: Partial<RankingState> }
   | { type: 'SET_RESUME_TEXT'; resumeText: string }
   | { type: 'SET_RESULTS'; results: string }
-  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null }
+  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null; resumeText?: string }
   | { type: 'RESET' };

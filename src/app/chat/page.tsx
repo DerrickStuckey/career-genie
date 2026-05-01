@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, isStep3Available } from '@/context/SessionContext';
+import { useSession, areAllStepsComplete } from '@/context/SessionContext';
 import { sendMessage } from '@/lib/llm-client';
 import { buildChatSystemPrompt, CHAT_KICKOFF_MESSAGE } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
@@ -52,7 +52,7 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    if (!isStep3Available(state) || !state.apiKey) {
+    if (!areAllStepsComplete(state) || !state.apiKey) {
       router.replace(state.wizardStep === 'setup' ? '/' : '/next-steps');
       return;
     }

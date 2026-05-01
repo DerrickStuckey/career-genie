@@ -36,6 +36,23 @@ describe('buildExportMarkdown', () => {
     const md = buildExportMarkdown([], null);
     expect(md).toBe('');
   });
+
+  it('includes resume section when resume text provided', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const md = buildExportMarkdown(questionResponses, ['Salary'], 'My resume content');
+    expect(md).toContain('## Resume');
+    expect(md).toContain('My resume content');
+  });
+
+  it('omits resume section when resume text is empty', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const md = buildExportMarkdown(questionResponses, ['Salary'], '');
+    expect(md).not.toContain('## Resume');
+  });
 });
 
 describe('buildExportText', () => {
@@ -70,12 +87,12 @@ describe('buildCopyablePrompt', () => {
 
     const prompt = buildCopyablePrompt(questionResponses, rankings);
     expect(prompt).toContain('career coach');
-    expect(prompt).toContain('Q: What would you do?');
-    expect(prompt).toContain('A: Travel');
+    expect(prompt).toContain('Question: "What would you do?"');
+    expect(prompt).toContain('Answer: Travel');
     expect(prompt).toContain('Why: Freedom');
     expect(prompt).toContain('1. Salary');
     expect(prompt).toContain('2. Growth');
-    expect(prompt).toContain('suggest 2-3 concrete career paths');
+    expect(prompt).toContain('Socratic method');
   });
 
   it('works with no why answer', () => {
@@ -83,7 +100,7 @@ describe('buildCopyablePrompt', () => {
       { questionId: 0, question: 'Q1', answer: 'Answer', whyAnswer: '', isComplete: true },
     ];
     const prompt = buildCopyablePrompt(questionResponses, []);
-    expect(prompt).toContain('A: Answer');
+    expect(prompt).toContain('Answer: Answer');
     expect(prompt).not.toContain('Why:');
   });
 });
