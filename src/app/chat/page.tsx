@@ -7,7 +7,7 @@ import { sendMessage } from '@/lib/llm-client';
 import { buildChatSystemPrompt, CHAT_KICKOFF_MESSAGE } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
-import { WizardNav } from '@/components/WizardNav';
+
 
 export default function ChatPage() {
   const { state, dispatch } = useSession();
@@ -106,16 +106,16 @@ export default function ChatPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex max-w-5xl mx-auto w-full px-4 gap-6 py-4">
         <aside className="w-64 shrink-0 hidden md:block">
-          <div className="sticky top-4 bg-white rounded-2xl border border-gray-200 p-4">
-            <h3 className="font-semibold text-sm text-gray-900 mb-3">Your Rankings</h3>
+          <div className="sticky top-4 bg-white rounded-2xl border border-stone-200 p-4">
+            <h3 className="font-semibold text-sm text-stone-900 mb-3">Your Rankings</h3>
             <ol className="space-y-1.5">
               {rankedQualities.map((q, i) => (
                 <li key={q} className="flex gap-2 text-sm">
-                  <span className="text-gray-400 w-5 text-right shrink-0">{i + 1}.</span>
-                  <span className={i < 5 ? 'text-gray-900 font-medium' : 'text-gray-600'}>
+                  <span className="text-stone-400 w-5 text-right shrink-0">{i + 1}.</span>
+                  <span className={i < 5 ? 'text-stone-900 font-medium' : 'text-stone-600'}>
                     {q}
                   </span>
                 </li>
@@ -137,7 +137,7 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4">
+          <div className="sticky bottom-0 bg-stone-50 pt-2 pb-4">
             <ChatInput
               onSend={handleSend}
               disabled={streaming}

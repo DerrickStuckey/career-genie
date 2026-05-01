@@ -6,7 +6,7 @@ import { useSession } from '@/context/SessionContext';
 import { RankingEngine } from '@/lib/ranking';
 import { RankingCard } from '@/components/RankingCard';
 import { ProgressBar } from '@/components/ProgressBar';
-import { WizardNav } from '@/components/WizardNav';
+
 
 export default function RankPage() {
   const { state, dispatch } = useSession();
@@ -70,9 +70,9 @@ export default function RankPage() {
   if (!currentPair) {
     return (
       <main className="min-h-screen flex flex-col">
-        <WizardNav />
+
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">Loading rankings...</p>
+          <p className="text-stone-500">Loading rankings...</p>
         </div>
       </main>
     );
@@ -80,16 +80,16 @@ export default function RankPage() {
 
   return (
     <main className="min-h-screen flex flex-col">
-      <WizardNav />
+
       <div className="flex-1 flex flex-col items-center justify-center px-4 max-w-2xl mx-auto w-full">
         <div className="w-full mb-8">
           <ProgressBar current={completed} total={total} />
         </div>
 
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+        <h2 className="text-xl font-semibold text-stone-900 mb-2">
           Which matters more to you?
         </h2>
-        <p className="text-sm text-gray-500 mb-8">
+        <p className="text-sm text-stone-500 mb-8">
           Click the one that&apos;s more important in your ideal job
         </p>
 
