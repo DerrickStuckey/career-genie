@@ -13,11 +13,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="bg-stone-50 text-stone-900 antialiased">
         <SessionProvider>
-          <div className="min-h-screen md:flex md:justify-center md:max-w-3xl md:mx-auto">
-            <SmokeTrailNav />
-            <div className="flex-1">
+          <div className="min-h-screen md:flex md:justify-center md:max-w-4xl md:mx-auto">
+            <SmokeTrailNav side="left" />
+            <div className="flex-1 md:px-10">
               {children}
             </div>
+            <SmokeTrailNav side="right" />
           </div>
         </SessionProvider>
       </body>
