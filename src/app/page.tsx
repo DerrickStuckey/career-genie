@@ -61,8 +61,7 @@ export default function WelcomePage() {
         <div className="w-full max-w-md space-y-6 text-center">
           <h1 className="text-3xl font-bold text-stone-900">Career Genie</h1>
           <p className="text-stone-600">
-            Discover what matters most in your career through guided reflection
-            and personalized coaching.
+            A wise and powerful genie will help you create a plan to achieve your dream job.
           </p>
           <div className="space-y-3">
             <p className="text-sm text-stone-500">
