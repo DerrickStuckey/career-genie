@@ -65,7 +65,7 @@ export default function NextStepsPage() {
   }
 
   async function handleCopyPrompt() {
-    const prompt = buildCopyablePrompt(state.questionResponses, rankedQualities);
+    const prompt = buildCopyablePrompt(state.questionResponses, rankedQualities, state.resumeText);
     await navigator.clipboard.writeText(prompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

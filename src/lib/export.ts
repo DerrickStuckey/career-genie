@@ -1,4 +1,5 @@
 import type { QuestionResponse } from '@/types';
+import { buildChatSystemPrompt } from '@/lib/prompts';
 
 export function buildExportMarkdown(
   questionResponses: QuestionResponse[],
@@ -36,35 +37,10 @@ export function buildExportMarkdown(
 export function buildCopyablePrompt(
   questionResponses: QuestionResponse[],
   rankedQualities: string[] | null,
+  resumeText?: string,
 ): string {
-  const parts: string[] = [];
-
-  parts.push(
-    'I completed a career self-reflection exercise. Based on my answers and priorities below, please act as a career coach and give me personalized, actionable career advice.',
-  );
-
-  const answeredQuestions = questionResponses.filter((qr) => qr.answer.trim() !== '');
-  if (answeredQuestions.length > 0) {
-    const qaBlock = answeredQuestions.map((qr) => {
-      let entry = `Q: ${qr.question}\nA: ${qr.answer}`;
-      if (qr.whyAnswer.trim()) {
-        entry += `\nWhy: ${qr.whyAnswer}`;
-      }
-      return entry;
-    }).join('\n\n');
-    parts.push('## My Reflection Answers\n\n' + qaBlock);
-  }
-
-  if (rankedQualities && rankedQualities.length > 0) {
-    const rankingBlock = rankedQualities.map((q, i) => `${i + 1}. ${q}`).join('\n');
-    parts.push('## My Career Priorities (most to least important)\n\n' + rankingBlock);
-  }
-
-  parts.push(
-    'Please suggest 2-3 concrete career paths or next steps that align with my answers and priorities. Reference specific things I shared. Acknowledge trade-offs honestly.',
-  );
-
-  return parts.join('\n\n');
+  return buildChatSystemPrompt(questionResponses, rankedQualities || [], resumeText)
+    + '\n\nPlease begin the coaching session.';
 }
 
 export function buildExportText(
