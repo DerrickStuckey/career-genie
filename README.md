@@ -15,7 +15,7 @@ Very loosely based on [Graham Weaver](https://www.grahamweaver.com/blog/the-comm
    - **In-app chat** — Enter an Anthropic or OpenAI API key to start a live career coaching session
    - **Export** — Download your results as Markdown or copy a ready-made prompt to use in any AI chat app
 
-No API key is needed until you opt into the in-app chat. All resume parsing happens client-side.
+No API key is needed until you opt into the in-app chat. When you do, your key is sent directly from the browser to the AI provider and never touches our servers. All resume parsing also happens client-side.
 
 ## Tech Stack
 

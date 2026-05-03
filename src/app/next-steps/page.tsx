@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, areAllStepsComplete } from '@/context/SessionContext';
 import { buildExportMarkdown, buildCopyablePrompt, downloadTextFile } from '@/lib/export';
+import { validateApiKey } from '@/lib/llm-client';
 
 import type { Provider } from '@/types';
 
@@ -32,22 +33,7 @@ export default function NextStepsPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: state.provider,
-          apiKey: state.apiKey,
-          systemPrompt: 'Reply with exactly: ok',
-          messages: [{ role: 'user', content: 'Hello' }],
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || `Validation failed (${response.status})`);
-      }
-
+      await validateApiKey(state.provider, state.apiKey);
       dispatch({ type: 'SET_WIZARD_STEP', step: 'chat' });
       router.push('/chat');
     } catch (err) {
@@ -137,7 +123,7 @@ export default function NextStepsPage() {
               </button>
 
               <p className="text-xs text-stone-400">
-                Your API key is used directly in your browser and never stored on any server.
+                Your API key is sent directly from your browser to the AI provider and never touches our servers.
               </p>
             </div>
 
