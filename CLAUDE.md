@@ -19,15 +19,14 @@ Next.js 16, React 19, TypeScript, Tailwind CSS 4, Vitest. Deployed on Vercel.
 - Hub-and-spoke workflow: Welcome → Hub → [Questions + Ranking + Resume] → Next Steps → (optionally) Career Chat
 - 5 deterministic reflection questions with optional "Why?" follow-up (`src/app/questions/page.tsx`)
 - Resume upload/paste page with PDF and DOCX parsing via pdfjs-dist/mammoth (`src/app/resume/page.tsx`)
-- One API route (`src/app/api/chat/route.ts`) proxies LLM requests to Anthropic/OpenAI with streaming
-- Browser-side stream parsing in `src/lib/llm-client.ts`
+- LLM requests go directly from the browser to Anthropic/OpenAI (no server proxy); streaming SSE parsed in `src/lib/llm-client.ts`
 - Swiss-style tournament ranking in `src/lib/ranking.ts`
 - System prompts in `src/lib/prompts.ts`
 - Export to .md with YAML frontmatter and copyable prompt in `src/lib/export.ts`
 
 ## Key Patterns
 
-- API key is only needed for in-app career chat (deferred to next-steps page)
+- API key is only needed for in-app career chat (deferred to next-steps page); key goes directly from browser to provider, never transits our server
 - Reflection questions are deterministic (no LLM) — answer + optional "Why?"
 - Steps 1 (Questions), 2 (Ranking), and 3 (Resume) can be completed in any order via the hub page
 - After all three steps, user chooses: in-app chat (with API key) or download/copy results
