@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @keyframes smoke-pulse {
   0%, 100% { opacity: 1; }
