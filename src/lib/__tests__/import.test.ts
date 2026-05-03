@@ -260,6 +260,40 @@ version: 1
   });
 });
 
+describe('parseExportMarkdown — resume parsing', () => {
+  it('parses resume section from exported markdown', () => {
+    const content = `---
+generated: 2026-04-28
+app: career-genie
+version: 1
+---
+
+# Career Genie Results
+
+## Reflection Questions
+
+### What would you do if you didn't have to work for a living?
+
+**Answer:** Travel
+
+## Resume
+
+Senior engineer with 10 years experience in web development.
+`;
+    const result = parseExportMarkdown(content, PREDEFINED_QUESTIONS);
+    expect('error' in result).toBe(false);
+    if ('error' in result) return;
+    expect(result.resumeText).toBe('Senior engineer with 10 years experience in web development.');
+  });
+
+  it('returns empty resume text when section missing (backward compat)', () => {
+    const result = parseExportMarkdown(VALID_MARKDOWN, PREDEFINED_QUESTIONS);
+    expect('error' in result).toBe(false);
+    if ('error' in result) return;
+    expect(result.resumeText).toBe('');
+  });
+});
+
 describe('parseExportMarkdown — round-trip', () => {
   it('parses back data exported by buildExportMarkdown', () => {
     const originalResponses: QuestionResponse[] = [

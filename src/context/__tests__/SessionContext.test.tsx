@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sessionReducer, initialState, areQuestionsComplete, isStep3Available } from '../SessionContext';
+import { sessionReducer, initialState, areQuestionsComplete, isResumeComplete, areAllStepsComplete } from '../SessionContext';
 
 describe('sessionReducer', () => {
   it('sets provider', () => {
@@ -98,6 +98,25 @@ describe('sessionReducer', () => {
     expect(state.rankingState.sortedResult).toBeNull();
     expect(state.rankingState.items).toEqual(initialState.rankingState.items);
   });
+
+  it('restores session with resume text', () => {
+    const state = sessionReducer(initialState, {
+      type: 'RESTORE_SESSION',
+      questionResponses: initialState.questionResponses,
+      sortedResult: null,
+      resumeText: 'Imported resume',
+    });
+    expect(state.resumeText).toBe('Imported resume');
+  });
+
+  it('restores session without resume text (backward compat)', () => {
+    const state = sessionReducer(initialState, {
+      type: 'RESTORE_SESSION',
+      questionResponses: initialState.questionResponses,
+      sortedResult: null,
+    });
+    expect(state.resumeText).toBe('');
+  });
 });
 
 describe('derived state helpers', () => {
@@ -113,13 +132,24 @@ describe('derived state helpers', () => {
     expect(areQuestionsComplete(state)).toBe(true);
   });
 
-  it('isStep3Available requires both questions and ranking complete', () => {
+  it('isResumeComplete returns false when resume is empty', () => {
+    expect(isResumeComplete(initialState)).toBe(false);
+  });
+
+  it('isResumeComplete returns true when resume has content', () => {
+    const state = sessionReducer(initialState, { type: 'SET_RESUME_TEXT', resumeText: 'My resume' });
+    expect(isResumeComplete(state)).toBe(true);
+  });
+
+  it('areAllStepsComplete requires questions, ranking, and resume complete', () => {
     let state = initialState;
     for (let i = 0; i < 5; i++) {
       state = sessionReducer(state, { type: 'SET_QUESTION_COMPLETE', questionId: i });
     }
-    expect(isStep3Available(state)).toBe(false);
+    expect(areAllStepsComplete(state)).toBe(false);
     state = sessionReducer(state, { type: 'SET_RANKING_STATE', rankingState: { sortedResult: ['A', 'B', 'C'] } });
-    expect(isStep3Available(state)).toBe(true);
+    expect(areAllStepsComplete(state)).toBe(false);
+    state = sessionReducer(state, { type: 'SET_RESUME_TEXT', resumeText: 'My resume' });
+    expect(areAllStepsComplete(state)).toBe(true);
   });
 });

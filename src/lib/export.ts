@@ -4,6 +4,7 @@ import { buildChatSystemPrompt } from '@/lib/prompts';
 export function buildExportMarkdown(
   questionResponses: QuestionResponse[],
   rankedQualities: string[] | null,
+  resumeText?: string,
 ): string {
   const sections: string[] = [];
 
@@ -27,6 +28,10 @@ export function buildExportMarkdown(
   if (rankedQualities && rankedQualities.length > 0) {
     const rankingLines = rankedQualities.map((q, i) => `${i + 1}. ${q}`);
     sections.push('## Priority Rankings (most to least important)\n\n' + rankingLines.join('\n'));
+  }
+
+  if (resumeText && resumeText.trim()) {
+    sections.push('## Resume\n\n' + resumeText.trim());
   }
 
   if (sections.length <= 2) return '';

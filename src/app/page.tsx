@@ -45,6 +45,7 @@ export default function WelcomePage() {
         type: 'RESTORE_SESSION',
         questionResponses: result.questionResponses,
         sortedResult: result.rankedQualities,
+        resumeText: result.resumeText,
       });
       router.push('/hub');
     };
@@ -65,9 +66,9 @@ export default function WelcomePage() {
           </p>
           <div className="space-y-3">
             <p className="text-sm text-stone-500">
-              You&apos;ll answer 5 reflection questions and rank your career
-              priorities. Then start an open-ended coaching session in
-              this app or in your AI Chat app of choice.
+              You&apos;ll answer 5 reflection questions, rank your career
+              priorities, and upload your resume. Then start an open-ended
+              coaching session in this app or in your AI Chat app of choice.
             </p>
             <button
               onClick={handleStart}

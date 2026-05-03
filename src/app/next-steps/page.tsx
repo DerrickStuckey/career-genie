@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, isStep3Available } from '@/context/SessionContext';
+import { useSession, areAllStepsComplete } from '@/context/SessionContext';
 import { buildExportMarkdown, buildCopyablePrompt, downloadTextFile } from '@/lib/export';
 
 import type { Provider } from '@/types';
@@ -17,7 +17,7 @@ export default function NextStepsPage() {
   const rankedQualities = state.rankingState.sortedResult || [];
 
   useEffect(() => {
-    if (!isStep3Available(state)) {
+    if (!areAllStepsComplete(state)) {
       router.replace(state.wizardStep === 'setup' ? '/' : '/hub');
     }
   }, [state, router]);
@@ -58,7 +58,7 @@ export default function NextStepsPage() {
   }
 
   function handleDownloadMarkdown() {
-    const md = buildExportMarkdown(state.questionResponses, rankedQualities);
+    const md = buildExportMarkdown(state.questionResponses, rankedQualities, state.resumeText);
     if (md) {
       downloadTextFile(md, 'career-genie-results.md');
     }
@@ -123,20 +123,6 @@ export default function NextStepsPage() {
                   onChange={(e) => dispatch({ type: 'SET_API_KEY', apiKey: e.target.value })}
                   placeholder={state.provider === 'anthropic' ? 'sk-ant-...' : 'sk-...'}
                   className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="resume" className="block text-sm font-medium text-stone-700 mb-2">
-                  Resume <span className="text-stone-400 font-normal">(optional)</span>
-                </label>
-                <textarea
-                  id="resume"
-                  value={state.resumeText}
-                  onChange={(e) => dispatch({ type: 'SET_RESUME_TEXT', resumeText: e.target.value })}
-                  placeholder="Paste your resume text here for more personalized advice..."
-                  rows={4}
-                  className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
                 />
               </div>
 

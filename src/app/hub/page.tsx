@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, areQuestionsComplete, isRankingComplete, isStep3Available } from '@/context/SessionContext';
+import { useSession, areQuestionsComplete, isRankingComplete, isResumeComplete, areAllStepsComplete } from '@/context/SessionContext';
 
 
 export default function HubPage() {
@@ -17,7 +17,8 @@ export default function HubPage() {
 
   const questionsComplete = areQuestionsComplete(state);
   const rankingComplete = isRankingComplete(state);
-  const chatAvailable = isStep3Available(state);
+  const resumeComplete = isResumeComplete(state);
+  const chatAvailable = areAllStepsComplete(state);
   const questionsAnswered = state.questionResponses.filter((qr) => qr.isComplete).length;
 
   function goToQuestions() {
@@ -28,6 +29,11 @@ export default function HubPage() {
   function goToRanking() {
     dispatch({ type: 'SET_WIZARD_STEP', step: 'rank' });
     router.push('/rank');
+  }
+
+  function goToResume() {
+    dispatch({ type: 'SET_WIZARD_STEP', step: 'resume' });
+    router.push('/resume');
   }
 
   function goToNextSteps() {
@@ -43,7 +49,7 @@ export default function HubPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-stone-900">Your Career Discovery</h1>
             <p className="mt-2 text-stone-600">
-              Complete both steps below in any order to unlock your personalized coaching session.
+              Complete all three steps below in any order to unlock your personalized coaching session.
             </p>
           </div>
 
@@ -100,6 +106,31 @@ export default function HubPage() {
           </button>
 
           <button
+            onClick={goToResume}
+            className={`w-full text-left rounded-2xl border-2 p-6 transition-colors ${
+              resumeComplete
+                ? 'border-emerald-300 bg-emerald-50'
+                : 'border-stone-200 bg-white hover:border-emerald-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-stone-900">Your Resume</h2>
+                <p className="text-sm text-stone-500 mt-1">
+                  {resumeComplete
+                    ? 'Resume uploaded'
+                    : 'Upload or paste your resume'}
+                </p>
+              </div>
+              {resumeComplete ? (
+                <span className="text-emerald-600 text-sm font-medium">Complete</span>
+              ) : (
+                <span className="text-emerald-600 text-sm font-medium">Start &rarr;</span>
+              )}
+            </div>
+          </button>
+
+          <button
             onClick={goToNextSteps}
             disabled={!chatAvailable}
             className={`w-full rounded-xl py-3 text-sm font-medium transition-all ${
@@ -108,7 +139,7 @@ export default function HubPage() {
                 : 'bg-stone-100 text-stone-400 cursor-not-allowed'
             }`}
           >
-            {chatAvailable ? 'Proceed to Coaching' : 'Complete both steps to continue'}
+            {chatAvailable ? 'Proceed to Coaching' : 'Complete all steps to continue'}
           </button>
         </div>
       </div>

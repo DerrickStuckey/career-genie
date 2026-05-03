@@ -43,4 +43,12 @@ describe('buildChatSystemPrompt', () => {
     const result = buildChatSystemPrompt(questionResponses, ['A'], '');
     expect(result).not.toContain('Resume:');
   });
+
+  it('does not contain "Obtain Resume" step (resume is always provided)', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'Answer', whyAnswer: '', isComplete: true },
+    ];
+    const result = buildChatSystemPrompt(questionResponses, ['A'], 'My resume');
+    expect(result).not.toContain('Obtain Resume');
+  });
 });
