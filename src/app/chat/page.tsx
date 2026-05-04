@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, areAllStepsComplete } from '@/context/SessionContext';
 import { sendMessage } from '@/lib/llm-client';
-import { buildChatSystemPrompt, CHAT_KICKOFF_MESSAGE } from '@/lib/prompts';
+import { buildChatSystemPrompt } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
 
@@ -28,13 +28,12 @@ export default function ChatPage() {
         provider: state.provider,
         apiKey: state.apiKey,
         systemPrompt,
-        messages: [CHAT_KICKOFF_MESSAGE],
+        messages: [],
       })) {
         content += chunk;
         setStreamingContent(content);
       }
 
-      dispatch({ type: 'ADD_CHAT_MESSAGE', message: CHAT_KICKOFF_MESSAGE });
       dispatch({
         type: 'ADD_CHAT_MESSAGE',
         message: { role: 'assistant', content },
@@ -108,11 +107,9 @@ export default function ChatPage() {
 
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 py-4">
         <div className="flex-1 overflow-y-auto space-y-1">
-          {state.chatMessages
-            .filter((msg) => !(msg.role === 'user' && msg.content === CHAT_KICKOFF_MESSAGE.content))
-            .map((msg, i) => (
-              <ChatMessage key={i} message={msg} />
-            ))}
+          {state.chatMessages.map((msg, i) => (
+            <ChatMessage key={i} message={msg} />
+          ))}
           {streaming && streamingContent && (
             <ChatMessage message={{ role: 'assistant', content: streamingContent }} />
           )}
