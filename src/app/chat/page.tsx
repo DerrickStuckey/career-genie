@@ -7,42 +7,100 @@ import { sendMessage } from '@/lib/llm-client';
 import { buildChatSystemPrompt } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
-
+import { ChatToolbar } from '@/components/ChatToolbar';
+import { ChatPanel } from '@/components/ChatPanel';
+import { AnswersPanel } from '@/components/AnswersPanel';
+import { RankingsPanel } from '@/components/RankingsPanel';
+import { ResumePanel } from '@/components/ResumePanel';
+import { CHAT_TOOLS, executeToolCall } from '@/lib/chat-tools';
+import { buildExportMarkdown, downloadTextFile } from '@/lib/export';
+import type { ChatMessage as ChatMessageType, ToolCall } from '@/types';
 
 export default function ChatPage() {
   const { state, dispatch } = useSession();
   const router = useRouter();
   const [streaming, setStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
+  const [activePanel, setActivePanel] = useState<'answers' | 'rankings' | 'resume' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
-  const systemPrompt = buildChatSystemPrompt(state.questionResponses, state.rankingState.sortedResult || [], state.resumeText);
+  const systemPrompt = buildChatSystemPrompt(
+    state.questionResponses,
+    state.rankingState.sortedResult || [],
+    state.resumeText,
+  );
 
-  async function generateInitialAdvice() {
+  const MAX_TOOL_ROUNDS = 3;
+
+  async function runChatTurn(messages: ChatMessageType[]) {
     setStreaming(true);
-    let content = '';
+    let currentRankings = state.rankingState.sortedResult || [];
+    let currentSystemPrompt = systemPrompt;
+    let currentMessages = messages;
 
     try {
-      for await (const chunk of sendMessage({
-        provider: state.provider,
-        apiKey: state.apiKey,
-        systemPrompt,
-        messages: [],
-      })) {
-        content += chunk;
-        setStreamingContent(content);
-      }
+      for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+        let content = '';
+        const toolCalls: ToolCall[] = [];
 
-      dispatch({
-        type: 'ADD_CHAT_MESSAGE',
-        message: { role: 'assistant', content },
-      });
+        for await (const event of sendMessage({
+          provider: state.provider,
+          apiKey: state.apiKey,
+          systemPrompt: currentSystemPrompt,
+          messages: currentMessages,
+          tools: CHAT_TOOLS,
+        })) {
+          if (event.type === 'text') {
+            content += event.text;
+            setStreamingContent(content);
+          } else if (event.type === 'tool_call') {
+            toolCalls.push(event);
+          }
+        }
+
+        if (toolCalls.length === 0) {
+          dispatch({ type: 'ADD_CHAT_MESSAGE', message: { role: 'assistant', content } });
+          break;
+        }
+
+        const assistantMsg: ChatMessageType = { role: 'assistant', content, toolCalls };
+        dispatch({ type: 'ADD_CHAT_MESSAGE', message: assistantMsg });
+
+        const toolResultMessages: ChatMessageType[] = [];
+        for (const tc of toolCalls) {
+          const result = executeToolCall(tc, currentRankings);
+          if (result.newRankings) {
+            dispatch({
+              type: 'SET_RANKING_STATE',
+              rankingState: { sortedResult: result.newRankings },
+            });
+            currentRankings = result.newRankings;
+          }
+          toolResultMessages.push({
+            role: 'user',
+            content: result.resultText,
+            toolResult: { toolUseId: tc.id },
+          });
+        }
+
+        for (const trm of toolResultMessages) {
+          dispatch({ type: 'ADD_CHAT_MESSAGE', message: trm });
+        }
+
+        currentSystemPrompt = buildChatSystemPrompt(
+          state.questionResponses,
+          currentRankings,
+          state.resumeText,
+        );
+        currentMessages = [...currentMessages, assistantMsg, ...toolResultMessages];
+        setStreamingContent('');
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Something went wrong';
       dispatch({
         type: 'ADD_CHAT_MESSAGE',
-        message: { role: 'assistant', content: `Error generating advice: ${errorMsg}` },
+        message: { role: 'assistant', content: `Error: ${errorMsg}` },
       });
     } finally {
       setStreaming(false);
@@ -58,7 +116,7 @@ export default function ChatPage() {
 
     if (!initializedRef.current && state.chatMessages.length === 0) {
       initializedRef.current = true;
-      generateInitialAdvice();
+      runChatTurn([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -68,48 +126,35 @@ export default function ChatPage() {
   }, [state.chatMessages, streamingContent]);
 
   async function handleSend(text: string) {
-    const userMessage = { role: 'user' as const, content: text };
+    const userMessage: ChatMessageType = { role: 'user', content: text };
     dispatch({ type: 'ADD_CHAT_MESSAGE', message: userMessage });
+    runChatTurn([...state.chatMessages, userMessage]);
+  }
 
-    const allMessages = [...state.chatMessages, userMessage];
-    setStreaming(true);
-    let content = '';
+  function handleDownload() {
+    const md = buildExportMarkdown(
+      state.questionResponses,
+      state.rankingState.sortedResult,
+      state.resumeText,
+    );
+    if (md) downloadTextFile(md, 'career-genie-results.md');
+  }
 
-    try {
-      for await (const chunk of sendMessage({
-        provider: state.provider,
-        apiKey: state.apiKey,
-        systemPrompt,
-        messages: allMessages,
-      })) {
-        content += chunk;
-        setStreamingContent(content);
-      }
-
-      dispatch({
-        type: 'ADD_CHAT_MESSAGE',
-        message: { role: 'assistant', content },
-      });
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Something went wrong';
-      dispatch({
-        type: 'ADD_CHAT_MESSAGE',
-        message: { role: 'assistant', content: `Error: ${errorMsg}` },
-      });
-    } finally {
-      setStreaming(false);
-      setStreamingContent('');
-    }
+  function handleReorderRankings(newRankings: string[]) {
+    dispatch({ type: 'SET_RANKING_STATE', rankingState: { sortedResult: newRankings } });
   }
 
   return (
     <main className="min-h-screen flex flex-col">
-
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 py-4">
+        <ChatToolbar onOpenPanel={setActivePanel} onDownload={handleDownload} />
+
         <div className="flex-1 overflow-y-auto space-y-1">
-          {state.chatMessages.map((msg, i) => (
-            <ChatMessage key={i} message={msg} />
-          ))}
+          {state.chatMessages
+            .filter((msg) => !msg.toolResult)
+            .map((msg, i) => (
+              <ChatMessage key={i} message={msg} />
+            ))}
           {streaming && streamingContent && (
             <ChatMessage message={{ role: 'assistant', content: streamingContent }} />
           )}
@@ -124,6 +169,33 @@ export default function ChatPage() {
           />
         </div>
       </div>
+
+      <ChatPanel
+        title="Survey Answers"
+        open={activePanel === 'answers'}
+        onClose={() => setActivePanel(null)}
+      >
+        <AnswersPanel questionResponses={state.questionResponses} />
+      </ChatPanel>
+
+      <ChatPanel
+        title="Rankings"
+        open={activePanel === 'rankings'}
+        onClose={() => setActivePanel(null)}
+      >
+        <RankingsPanel
+          rankings={state.rankingState.sortedResult || []}
+          onReorder={handleReorderRankings}
+        />
+      </ChatPanel>
+
+      <ChatPanel
+        title="Resume"
+        open={activePanel === 'resume'}
+        onClose={() => setActivePanel(null)}
+      >
+        <ResumePanel resumeText={state.resumeText} />
+      </ChatPanel>
     </main>
   );
 }
