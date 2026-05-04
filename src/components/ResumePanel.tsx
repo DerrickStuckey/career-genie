@@ -8,8 +8,6 @@ export function ResumePanel({ resumeText }: ResumePanelProps) {
   }
 
   return (
-    <div className="prose prose-sm prose-stone max-w-none">
-      <pre className="whitespace-pre-wrap text-sm text-stone-800 font-sans">{resumeText}</pre>
-    </div>
+    <pre className="whitespace-pre-wrap text-sm text-stone-800 font-sans leading-relaxed">{resumeText}</pre>
   );
 }
