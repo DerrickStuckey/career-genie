@@ -40,6 +40,52 @@ function buildProviderRequest(
   };
 }
 
+export function toAnthropicMessages(messages: ChatMessage[]): unknown[] {
+  return messages.map((m) => {
+    if (m.toolCalls && m.toolCalls.length > 0) {
+      const content: unknown[] = [];
+      if (m.content) content.push({ type: 'text', text: m.content });
+      for (const tc of m.toolCalls) {
+        content.push({ type: 'tool_use', id: tc.id, name: tc.name, input: tc.input });
+      }
+      return { role: 'assistant', content };
+    }
+    if (m.toolResult) {
+      return {
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: m.toolResult.toolUseId, content: m.content }],
+      };
+    }
+    return { role: m.role, content: m.content };
+  });
+}
+
+export function toOpenAIMessages(messages: ChatMessage[], systemPrompt: string): unknown[] {
+  const result: unknown[] = [{ role: 'system', content: systemPrompt }];
+  for (const m of messages) {
+    if (m.toolCalls && m.toolCalls.length > 0) {
+      result.push({
+        role: 'assistant',
+        content: m.content || null,
+        tool_calls: m.toolCalls.map((tc) => ({
+          id: tc.id,
+          type: 'function',
+          function: { name: tc.name, arguments: JSON.stringify(tc.input) },
+        })),
+      });
+    } else if (m.toolResult) {
+      result.push({
+        role: 'tool',
+        tool_call_id: m.toolResult.toolUseId,
+        content: m.content,
+      });
+    } else {
+      result.push({ role: m.role, content: m.content });
+    }
+  }
+  return result;
+}
+
 export async function* sendMessage(
   params: SendMessageParams,
 ): AsyncGenerator<string> {

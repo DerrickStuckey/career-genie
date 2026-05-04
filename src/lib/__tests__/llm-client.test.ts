@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { parseAnthropicStream, parseOpenAIStream, sendMessage, validateApiKey } from '../llm-client';
+import { parseAnthropicStream, parseOpenAIStream, sendMessage, validateApiKey, toAnthropicMessages, toOpenAIMessages } from '../llm-client';
 
 function makeStream(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -174,5 +174,90 @@ describe('validateApiKey', () => {
     await expect(validateApiKey('anthropic', 'bad-key')).rejects.toThrow(
       'Invalid API key. Please check your key and try again.',
     );
+  });
+});
+
+describe('toAnthropicMessages', () => {
+  it('passes plain text messages through', () => {
+    const messages = [
+      { role: 'user' as const, content: 'Hello' },
+      { role: 'assistant' as const, content: 'Hi there' },
+    ];
+    expect(toAnthropicMessages(messages)).toEqual([
+      { role: 'user', content: 'Hello' },
+      { role: 'assistant', content: 'Hi there' },
+    ]);
+  });
+
+  it('converts assistant message with toolCalls to content blocks', () => {
+    const messages = [{
+      role: 'assistant' as const,
+      content: 'Updating rankings...',
+      toolCalls: [{ id: 'toolu_123', name: 'update_rankings', input: { rankings: ['A', 'B'] } }],
+    }];
+    const result = toAnthropicMessages(messages);
+    expect(result).toEqual([{
+      role: 'assistant',
+      content: [
+        { type: 'text', text: 'Updating rankings...' },
+        { type: 'tool_use', id: 'toolu_123', name: 'update_rankings', input: { rankings: ['A', 'B'] } },
+      ],
+    }]);
+  });
+
+  it('converts toolResult message to tool_result content block', () => {
+    const messages = [{
+      role: 'user' as const,
+      content: 'Rankings updated successfully.',
+      toolResult: { toolUseId: 'toolu_123' },
+    }];
+    const result = toAnthropicMessages(messages);
+    expect(result).toEqual([{
+      role: 'user',
+      content: [{ type: 'tool_result', tool_use_id: 'toolu_123', content: 'Rankings updated successfully.' }],
+    }]);
+  });
+});
+
+describe('toOpenAIMessages', () => {
+  it('includes system prompt and passes plain messages through', () => {
+    const messages = [{ role: 'user' as const, content: 'Hello' }];
+    const result = toOpenAIMessages(messages, 'Be helpful');
+    expect(result).toEqual([
+      { role: 'system', content: 'Be helpful' },
+      { role: 'user', content: 'Hello' },
+    ]);
+  });
+
+  it('converts assistant message with toolCalls to OpenAI format', () => {
+    const messages = [{
+      role: 'assistant' as const,
+      content: 'Updating...',
+      toolCalls: [{ id: 'call_abc', name: 'update_rankings', input: { rankings: ['A'] } }],
+    }];
+    const result = toOpenAIMessages(messages, 'sys');
+    expect(result[1]).toEqual({
+      role: 'assistant',
+      content: 'Updating...',
+      tool_calls: [{
+        id: 'call_abc',
+        type: 'function',
+        function: { name: 'update_rankings', arguments: '{"rankings":["A"]}' },
+      }],
+    });
+  });
+
+  it('converts toolResult message to OpenAI tool role', () => {
+    const messages = [{
+      role: 'user' as const,
+      content: 'Done.',
+      toolResult: { toolUseId: 'call_abc' },
+    }];
+    const result = toOpenAIMessages(messages, 'sys');
+    expect(result[1]).toEqual({
+      role: 'tool',
+      tool_call_id: 'call_abc',
+      content: 'Done.',
+    });
   });
 });
