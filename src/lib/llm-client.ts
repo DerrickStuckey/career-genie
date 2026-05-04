@@ -45,10 +45,16 @@ export async function* sendMessage(
 ): AsyncGenerator<string> {
   const { provider, apiKey, systemPrompt, messages } = params;
 
+  const effectiveMessages = messages.length === 0
+    ? [{ role: 'user' as const, content: 'Begin the coaching session' }]
+    : messages[0].role !== 'user'
+      ? [{ role: 'user' as const, content: 'Begin the coaching session' }, ...messages]
+      : messages;
+
   const body =
     provider === 'anthropic'
-      ? { model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages, stream: true }
-      : { model: 'gpt-4o', messages: [{ role: 'system', content: systemPrompt }, ...messages], max_tokens: 1024, stream: true };
+      ? { model: 'claude-sonnet-4-6', max_tokens: 1024, system: systemPrompt, messages: effectiveMessages, stream: true }
+      : { model: 'gpt-4o', messages: [{ role: 'system', content: systemPrompt }, ...effectiveMessages], max_tokens: 1024, stream: true };
 
   const { url, init } = buildProviderRequest(provider, apiKey, body);
   const response = await fetch(url, init);

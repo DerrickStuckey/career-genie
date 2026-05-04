@@ -45,7 +45,7 @@ export function buildCopyablePrompt(
   resumeText?: string,
 ): string {
   return buildChatSystemPrompt(questionResponses, rankedQualities || [], resumeText)
-    + '\n\nPlease begin the coaching session.';
+    + '\n\nBegin the coaching session.';
 }
 
 export function buildExportText(
