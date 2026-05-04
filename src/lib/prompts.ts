@@ -21,6 +21,14 @@ Sub-task details
   2b. Try to have the user create their own plan by answering your questions, but prompt them with suggestions if they get completely stuck
 </instructions>
 
+<tools_guidance>
+You have access to an update_rankings tool that can reorder the user's career quality priorities. Use it when:
+- The user explicitly asks to change their ranking order
+- The conversation reveals a clear shift in priorities that the user confirms
+
+Always confirm the intended change with the user before calling the tool. After using the tool, briefly acknowledge what changed.
+</tools_guidance>
+
 {{REFLECTION_ANSWERS}}
 
 {{RANKED_QUALITIES}}
