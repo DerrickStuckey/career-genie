@@ -16,7 +16,29 @@ describe('buildChatSystemPrompt', () => {
     expect(result).toContain('1. Salary');
     expect(result).toContain('3. Balance');
     expect(result).toContain('Socratic method');
-    expect(result).not.toContain('{{SURVEY_RESULTS}}');
+    expect(result).not.toContain('{{REFLECTION_ANSWERS}}');
+    expect(result).not.toContain('{{RANKED_QUALITIES}}');
+    expect(result).not.toContain('{{RESUME}}');
+  });
+
+  it('uses distinct XML sections for each context type', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const result = buildChatSystemPrompt(questionResponses, ['Salary'], 'My resume');
+    expect(result).toContain('<instructions>');
+    expect(result).toContain('</instructions>');
+    expect(result).toContain('<reflection_answers>');
+    expect(result).toContain('</reflection_answers>');
+    expect(result).toContain('<ranked_qualities>');
+    expect(result).toContain('</ranked_qualities>');
+    expect(result).toContain('<resume>');
+    expect(result).toContain('</resume>');
+  });
+
+  it('includes kickoff instruction in system prompt', () => {
+    const result = buildChatSystemPrompt([], []);
+    expect(result).toContain('Begin the coaching session now.');
   });
 
   it('handles unanswered questions', () => {
@@ -32,7 +54,7 @@ describe('buildChatSystemPrompt', () => {
       { questionId: 0, question: 'Q1', answer: 'Answer', whyAnswer: '', isComplete: true },
     ];
     const result = buildChatSystemPrompt(questionResponses, ['A'], 'My resume text here');
-    expect(result).toContain('Resume:');
+    expect(result).toContain('<resume>');
     expect(result).toContain('My resume text here');
   });
 
@@ -41,7 +63,7 @@ describe('buildChatSystemPrompt', () => {
       { questionId: 0, question: 'Q1', answer: 'Answer', whyAnswer: '', isComplete: true },
     ];
     const result = buildChatSystemPrompt(questionResponses, ['A'], '');
-    expect(result).not.toContain('Resume:');
+    expect(result).not.toContain('<resume>');
   });
 
   it('does not contain "Obtain Resume" step (resume is always provided)', () => {

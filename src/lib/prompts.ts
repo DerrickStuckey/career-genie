@@ -1,12 +1,9 @@
-import type { QuestionResponse, ChatMessage } from '@/types';
+import type { QuestionResponse } from '@/types';
 
-const CHAT_SYSTEM_PROMPT_TEMPLATE = `You are a clever and wise genie, summoned to serve as a career coach for a person who wants guidance. Your goal is to help the user create a plan to achieve their "dream job" within 5 years (or as close to it as is realistic). Note: a dream job may not be a job at all but could be owning their own business, or multiple jobs, etc…
+const CHAT_SYSTEM_PROMPT_TEMPLATE = `<instructions>
+You are a clever and wise genie, summoned to serve as a career coach for a person who wants guidance. Your goal is to help the user create a plan to achieve their "dream job" within 5 years (or as close to it as is realistic). Note: a dream job may not be a job at all but could be owning their own business, or multiple jobs, etc…
 
-Here are results from a survey the user has already taken:
-
-<survey_results>
-{{SURVEY_RESULTS}}
-</survey_results>
+The user has already completed a career survey. Their responses are provided below in separate sections.
 
 Your sub-tasks are:
 1. Identify dream job
@@ -21,7 +18,16 @@ Sub-task details
 
 2. Plan to achieve the dream job: help the user formulate a plan to achieve their dream job, or something close to it
   2a. Using the Socratic method as much as possible, help the user construct a plan which, starting from where they are currently, gives them the best chance of achieving their "dream job" or something close to it.
-  2b. Try to have the user create their own plan by answering your questions, but prompt them with suggestions if they get completely stuck`;
+  2b. Try to have the user create their own plan by answering your questions, but prompt them with suggestions if they get completely stuck
+
+Begin the coaching session now.
+</instructions>
+
+{{REFLECTION_ANSWERS}}
+
+{{RANKED_QUALITIES}}
+
+{{RESUME}}`;
 
 export function buildChatSystemPrompt(
   questionResponses: QuestionResponse[],
@@ -39,20 +45,20 @@ export function buildChatSystemPrompt(
     })
     .join('\n\n');
 
+  const reflectionBlock = `<reflection_answers>\n${qaSummary}\n</reflection_answers>`;
+
   const rankingSummary = rankedQualities
     .map((q, i) => `${i + 1}. ${q}`)
     .join('\n');
+  const rankingBlock = `<ranked_qualities>\n${rankingSummary}\n</ranked_qualities>`;
 
-  let surveyResults = `Career Reflection Questions:\n\n${qaSummary}\n\nJob Qualities Ranked (most to least important):\n\n${rankingSummary}`;
-
+  let resumeBlock = '';
   if (resumeText && resumeText.trim()) {
-    surveyResults += `\n\nResume:\n\n${resumeText.trim()}`;
+    resumeBlock = `<resume>\n${resumeText.trim()}\n</resume>`;
   }
 
-  return CHAT_SYSTEM_PROMPT_TEMPLATE.replace('{{SURVEY_RESULTS}}', surveyResults);
+  return CHAT_SYSTEM_PROMPT_TEMPLATE
+    .replace('{{REFLECTION_ANSWERS}}', reflectionBlock)
+    .replace('{{RANKED_QUALITIES}}', rankingBlock)
+    .replace('{{RESUME}}', resumeBlock);
 }
-
-export const CHAT_KICKOFF_MESSAGE: ChatMessage = {
-  role: 'user' as const,
-  content: 'Please begin the coaching session.',
-};
