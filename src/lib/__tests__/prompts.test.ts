@@ -36,9 +36,9 @@ describe('buildChatSystemPrompt', () => {
     expect(result).toContain('</resume>');
   });
 
-  it('includes kickoff instruction in system prompt', () => {
+  it('does not include kickoff instruction in system prompt', () => {
     const result = buildChatSystemPrompt([], []);
-    expect(result).toContain('Begin the coaching session now.');
+    expect(result).not.toContain('Begin the coaching session');
   });
 
   it('handles unanswered questions', () => {

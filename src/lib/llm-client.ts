@@ -46,9 +46,9 @@ export async function* sendMessage(
   const { provider, apiKey, systemPrompt, messages } = params;
 
   const effectiveMessages = messages.length === 0
-    ? [{ role: 'user' as const, content: 'Begin' }]
+    ? [{ role: 'user' as const, content: 'Begin the coaching session' }]
     : messages[0].role !== 'user'
-      ? [{ role: 'user' as const, content: 'Begin' }, ...messages]
+      ? [{ role: 'user' as const, content: 'Begin the coaching session' }, ...messages]
       : messages;
 
   const body =

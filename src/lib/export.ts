@@ -44,7 +44,8 @@ export function buildCopyablePrompt(
   rankedQualities: string[] | null,
   resumeText?: string,
 ): string {
-  return buildChatSystemPrompt(questionResponses, rankedQualities || [], resumeText);
+  return buildChatSystemPrompt(questionResponses, rankedQualities || [], resumeText)
+    + '\n\nBegin the coaching session.';
 }
 
 export function buildExportText(

@@ -19,8 +19,6 @@ Sub-task details
 2. Plan to achieve the dream job: help the user formulate a plan to achieve their dream job, or something close to it
   2a. Using the Socratic method as much as possible, help the user construct a plan which, starting from where they are currently, gives them the best chance of achieving their "dream job" or something close to it.
   2b. Try to have the user create their own plan by answering your questions, but prompt them with suggestions if they get completely stuck
-
-Begin the coaching session now.
 </instructions>
 
 {{REFLECTION_ANSWERS}}
