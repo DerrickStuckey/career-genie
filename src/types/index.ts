@@ -2,9 +2,27 @@ export type Provider = 'anthropic' | 'openai';
 
 export type WizardStep = 'setup' | 'hub' | 'questions' | 'rank' | 'resume' | 'next-steps' | 'chat';
 
+export interface ToolCall {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export type StreamEvent =
+  | { type: 'text'; text: string }
+  | { type: 'tool_call'; id: string; name: string; input: Record<string, unknown> };
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  toolCalls?: ToolCall[];
+  toolResult?: { toolUseId: string };
 }
 
 export interface QuestionResponse {
