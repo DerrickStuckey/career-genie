@@ -70,6 +70,9 @@ export default function WelcomePage() {
               priorities, and upload your resume. Then start an open-ended
               coaching session in this app or in your AI Chat app of choice.
             </p>
+            <p className="text-sm text-stone-400">
+              Your data never leaves your browser — nothing is stored or logged on our servers.
+            </p>
             <button
               onClick={handleStart}
               className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
