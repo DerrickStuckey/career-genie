@@ -142,6 +142,11 @@ export default function ChatPage() {
 
   function handleReorderRankings(newRankings: string[]) {
     dispatch({ type: 'SET_RANKING_STATE', rankingState: { sortedResult: newRankings } });
+    const rankingsList = newRankings.map((r, i) => `${i + 1}. ${r}`).join('\n');
+    dispatch({
+      type: 'ADD_CHAT_MESSAGE',
+      message: { role: 'user', content: `I've updated my rankings. New order:\n${rankingsList}` },
+    });
   }
 
   return (
