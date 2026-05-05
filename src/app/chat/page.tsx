@@ -190,7 +190,7 @@ export default function ChatPage() {
       >
         <RankingsPanel
           rankings={state.rankingState.sortedResult || []}
-          onReorder={handleReorderRankings}
+          onSave={handleReorderRankings}
         />
       </ChatPanel>
 

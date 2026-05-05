@@ -1,16 +1,26 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 interface RankingsPanelProps {
   rankings: string[];
-  onReorder: (newRankings: string[]) => void;
+  onSave: (newRankings: string[]) => void;
 }
 
-export function RankingsPanel({ rankings, onReorder }: RankingsPanelProps) {
+export function RankingsPanel({ rankings, onSave }: RankingsPanelProps) {
+  const [draft, setDraft] = useState(rankings);
+
+  useEffect(() => {
+    setDraft(rankings);
+  }, [rankings]);
+
+  const hasChanges = JSON.stringify(draft) !== JSON.stringify(rankings);
+
   function moveItem(index: number, direction: 'up' | 'down') {
-    const newRankings = [...rankings];
+    const next = [...draft];
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
-    [newRankings[index], newRankings[swapIndex]] = [newRankings[swapIndex], newRankings[index]];
-    onReorder(newRankings);
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+    setDraft(next);
   }
 
   if (rankings.length === 0) {
@@ -19,7 +29,7 @@ export function RankingsPanel({ rankings, onReorder }: RankingsPanelProps) {
 
   return (
     <div className="space-y-1">
-      {rankings.map((item, i) => (
+      {draft.map((item, i) => (
         <div
           key={item}
           className="flex items-center gap-2 py-2 px-3 rounded-lg bg-white border border-stone-200"
@@ -36,7 +46,7 @@ export function RankingsPanel({ rankings, onReorder }: RankingsPanelProps) {
           </button>
           <button
             onClick={() => moveItem(i, 'down')}
-            disabled={i === rankings.length - 1}
+            disabled={i === draft.length - 1}
             className="text-stone-400 hover:text-stone-700 disabled:opacity-25 disabled:hover:text-stone-400 text-sm px-1"
             aria-label={`Move ${item} down`}
           >
@@ -44,6 +54,14 @@ export function RankingsPanel({ rankings, onReorder }: RankingsPanelProps) {
           </button>
         </div>
       ))}
+      {hasChanges && (
+        <button
+          onClick={() => onSave(draft)}
+          className="mt-3 w-full py-2 text-sm font-medium rounded-lg bg-stone-800 text-white hover:bg-stone-700 transition-colors"
+        >
+          Save Rankings
+        </button>
+      )}
     </div>
   );
 }
