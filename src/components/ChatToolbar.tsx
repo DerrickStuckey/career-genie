@@ -16,7 +16,7 @@ const BUTTONS: { panel?: PanelType; label: string; action?: 'download' }[] = [
 
 export function ChatToolbar({ onOpenPanel, onDownload }: ChatToolbarProps) {
   return (
-    <div className="flex gap-2 py-2 border-b border-stone-200 mb-2">
+    <div className="sticky top-0 z-10 flex gap-2 py-2 border-b border-stone-200 mb-2 bg-stone-50">
       {BUTTONS.map((btn) => (
         <button
           key={btn.label}
