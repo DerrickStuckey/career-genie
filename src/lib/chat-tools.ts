@@ -4,6 +4,8 @@ export const UPDATE_RANKINGS_TOOL: ToolDefinition = {
   name: 'update_rankings',
   description:
     'Update the user\'s priority rankings. Provide the complete list of qualities in the new desired order, from most important (first) to least important (last). All existing qualities must be included.',
+  // TODO: Use an enum in items to restrict values to the user's actual ranking attributes.
+  // This would let provider structured outputs reject invalid items at the API level.
   inputSchema: {
     type: 'object',
     properties: {
