@@ -1,4 +1,5 @@
 import type { Provider, ChatMessage, ToolDefinition, StreamEvent } from '@/types';
+import { ANTHROPIC_CHAT_MODEL, OPENAI_CHAT_MODEL } from './models';
 
 interface SendMessageParams {
   provider: Provider;
@@ -111,7 +112,7 @@ export async function* sendMessage(
   const body =
     provider === 'anthropic'
       ? {
-          model: model || 'claude-sonnet-4-6',
+          model: model || ANTHROPIC_CHAT_MODEL,
           max_tokens: maxTokens,
           system: systemPrompt,
           messages: toAnthropicMessages(effectiveMessages),
@@ -119,7 +120,7 @@ export async function* sendMessage(
           ...(anthropicTools ? { tools: anthropicTools } : {}),
         }
       : {
-          model: model || 'gpt-4o',
+          model: model || OPENAI_CHAT_MODEL,
           messages: toOpenAIMessages(effectiveMessages, systemPrompt),
           max_completion_tokens: maxTokens,
           stream: true,
@@ -151,8 +152,8 @@ export async function* sendMessage(
 export async function validateApiKey(provider: Provider, apiKey: string): Promise<void> {
   const body =
     provider === 'anthropic'
-      ? { model: 'claude-sonnet-4-6', max_tokens: 16, system: 'Reply with exactly: ok', messages: [{ role: 'user', content: 'Hello' }] }
-      : { model: 'gpt-4o', messages: [{ role: 'system', content: 'Reply with exactly: ok' }, { role: 'user', content: 'Hello' }], max_completion_tokens: 16 };
+      ? { model: ANTHROPIC_CHAT_MODEL, max_tokens: 16, system: 'Reply with exactly: ok', messages: [{ role: 'user', content: 'Hello' }] }
+      : { model: OPENAI_CHAT_MODEL, messages: [{ role: 'system', content: 'Reply with exactly: ok' }, { role: 'user', content: 'Hello' }], max_completion_tokens: 16 };
 
   const { url, init } = buildProviderRequest(provider, apiKey, body);
   const response = await fetch(url, init);

@@ -14,6 +14,7 @@ import { RankingsPanel } from '@/components/RankingsPanel';
 import { ResumePanel } from '@/components/ResumePanel';
 import { CHAT_TOOLS, executeToolCall } from '@/lib/chat-tools';
 import { buildExportMarkdown, downloadTextFile } from '@/lib/export';
+import { ANTHROPIC_FAST_MODEL, OPENAI_FAST_MODEL } from '@/lib/models';
 import type { ChatMessage as ChatMessageType, ToolCall } from '@/types';
 
 export default function ChatPage() {
@@ -128,8 +129,8 @@ export default function ChatPage() {
       try {
         let formatted = '';
         const fastModel = state.provider === 'anthropic'
-          ? 'claude-haiku-4-5-20251001'
-          : 'gpt-5-mini-2025-08-07';
+          ? ANTHROPIC_FAST_MODEL
+          : OPENAI_FAST_MODEL;
         for await (const event of sendMessage({
           provider: state.provider,
           apiKey: state.apiKey,
