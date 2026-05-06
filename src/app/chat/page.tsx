@@ -265,6 +265,7 @@ export default function ChatPage() {
         title="Resume"
         open={activePanel === 'resume'}
         onClose={() => setActivePanel(null)}
+        wide
       >
         <ResumePanel resumeText={state.resumeText} updatedResumeMarkdown={state.updatedResumeMarkdown} />
       </ChatPanel>

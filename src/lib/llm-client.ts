@@ -121,7 +121,7 @@ export async function* sendMessage(
       : {
           model: model || 'gpt-4o',
           messages: toOpenAIMessages(effectiveMessages, systemPrompt),
-          max_tokens: maxTokens,
+          max_completion_tokens: maxTokens,
           stream: true,
           ...(openaiTools ? { tools: openaiTools } : {}),
         };
@@ -146,7 +146,7 @@ export async function validateApiKey(provider: Provider, apiKey: string): Promis
   const body =
     provider === 'anthropic'
       ? { model: 'claude-sonnet-4-6', max_tokens: 16, system: 'Reply with exactly: ok', messages: [{ role: 'user', content: 'Hello' }] }
-      : { model: 'gpt-4o', messages: [{ role: 'system', content: 'Reply with exactly: ok' }, { role: 'user', content: 'Hello' }], max_tokens: 16 };
+      : { model: 'gpt-4o', messages: [{ role: 'system', content: 'Reply with exactly: ok' }, { role: 'user', content: 'Hello' }], max_completion_tokens: 16 };
 
   const { url, init } = buildProviderRequest(provider, apiKey, body);
   const response = await fetch(url, init);

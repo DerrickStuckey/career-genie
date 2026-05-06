@@ -147,7 +147,7 @@ describe('sendMessage', () => {
     expect(body.stream).toBe(true);
   });
 
-  it('calls OpenAI directly with correct URL and max_tokens', async () => {
+  it('calls OpenAI directly with correct URL and max_completion_tokens', async () => {
     const stream = makeStream([
       'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n',
       'data: [DONE]\n\n',
@@ -170,7 +170,7 @@ describe('sendMessage', () => {
       expect.objectContaining({ method: 'POST' }),
     );
     const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
-    expect(body.max_tokens).toBe(1024);
+    expect(body.max_completion_tokens).toBe(1024);
     expect(body.stream).toBe(true);
   });
 
@@ -209,7 +209,7 @@ describe('sendMessage', () => {
     })) { /* consume */ }
 
     const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
-    expect(body.max_tokens).toBe(2048);
+    expect(body.max_completion_tokens).toBe(2048);
   });
 
   it('throws generic error on failure without leaking upstream body', async () => {
