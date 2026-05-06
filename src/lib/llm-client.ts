@@ -130,7 +130,13 @@ export async function* sendMessage(
   const response = await fetch(url, init);
 
   if (!response.ok) {
-    throw new Error('Chat request failed. Please check your API key and try again.');
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Chat request failed. Please check your API key and try again.');
+    }
+    if (response.status === 529) {
+      throw new Error('The AI provider is currently overloaded. Please try again in a moment.');
+    }
+    throw new Error(`Chat request failed (status ${response.status}). Please try again.`);
   }
 
   if (!response.body) throw new Error('No response body');
@@ -152,7 +158,13 @@ export async function validateApiKey(provider: Provider, apiKey: string): Promis
   const response = await fetch(url, init);
 
   if (!response.ok) {
-    throw new Error('Invalid API key. Please check your key and try again.');
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Invalid API key. Please check your key and try again.');
+    }
+    if (response.status === 529) {
+      throw new Error('The AI provider is currently overloaded. Please try again in a moment.');
+    }
+    throw new Error(`API key validation failed (status ${response.status}). Please try again.`);
   }
 }
 
@@ -179,7 +191,12 @@ export async function* parseAnthropicStream(
         try {
           const parsed = JSON.parse(data);
 
-          if (parsed.type === 'content_block_start' && parsed.content_block?.type === 'tool_use') {
+          if (parsed.type === 'error') {
+            const msg = parsed.error?.type === 'overloaded_error'
+              ? 'The AI provider is currently overloaded. Please try again in a moment.'
+              : parsed.error?.message || 'An unexpected error occurred.';
+            throw new Error(msg);
+          } else if (parsed.type === 'content_block_start' && parsed.content_block?.type === 'tool_use') {
             pendingToolCall = {
               id: parsed.content_block.id,
               name: parsed.content_block.name,
@@ -201,8 +218,9 @@ export async function* parseAnthropicStream(
             };
             pendingToolCall = null;
           }
-        } catch {
-          // skip non-JSON lines
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          throw e;
         }
       }
     }
@@ -259,8 +277,9 @@ export async function* parseOpenAIStream(
             }
             pendingToolCalls.clear();
           }
-        } catch {
-          // skip non-JSON lines
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          throw e;
         }
       }
     }
