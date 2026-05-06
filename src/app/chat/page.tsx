@@ -129,7 +129,7 @@ export default function ChatPage() {
         let formatted = '';
         const fastModel = state.provider === 'anthropic'
           ? 'claude-haiku-4-5-20251001'
-          : 'gpt-5.4-mini';
+          : 'gpt-5-mini-2025-08-07';
         for await (const event of sendMessage({
           provider: state.provider,
           apiKey: state.apiKey,
