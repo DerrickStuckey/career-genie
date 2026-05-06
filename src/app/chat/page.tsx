@@ -23,6 +23,7 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState('');
   const [activePanel, setActivePanel] = useState<'answers' | 'rankings' | 'resume' | null>(null);
   const [resumeJustUpdated, setResumeJustUpdated] = useState(false);
+  const [formattingResume, setFormattingResume] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
@@ -122,6 +123,7 @@ export default function ChatPage() {
   }
 
   async function initializeChat() {
+    setFormattingResume(true);
     if (state.resumeText.trim() && !state.updatedResumeMarkdown) {
       try {
         let formatted = '';
@@ -143,6 +145,7 @@ export default function ChatPage() {
         console.warn('Resume formatting failed:', error);
       }
     }
+    setFormattingResume(false);
     runChatTurn([]);
   }
 
@@ -206,6 +209,9 @@ export default function ChatPage() {
             .map((msg, i) => (
               <ChatMessage key={i} message={msg} />
             ))}
+          {formattingResume && (
+            <p className="text-center text-sm text-stone-400 py-8">Preparing your resume...</p>
+          )}
           {streaming && streamingContent && (
             <ChatMessage message={{ role: 'assistant', content: streamingContent }} />
           )}
