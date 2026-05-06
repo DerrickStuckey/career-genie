@@ -127,12 +127,16 @@ export default function ChatPage() {
     if (state.resumeText.trim() && !state.updatedResumeMarkdown) {
       try {
         let formatted = '';
+        const fastModel = state.provider === 'anthropic'
+          ? 'claude-haiku-4-5-20251001'
+          : 'gpt-5.4-mini';
         for await (const event of sendMessage({
           provider: state.provider,
           apiKey: state.apiKey,
           systemPrompt: RESUME_FORMATTING_SYSTEM_PROMPT,
           messages: [{ role: 'user' as const, content: state.resumeText }],
           maxTokens: 4096,
+          model: fastModel,
         })) {
           if (event.type === 'text') {
             formatted += event.text;
