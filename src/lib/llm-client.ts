@@ -6,6 +6,7 @@ interface SendMessageParams {
   systemPrompt: string;
   messages: ChatMessage[];
   tools?: ToolDefinition[];
+  maxTokens?: number;
 }
 
 function buildProviderRequest(
@@ -90,7 +91,7 @@ export function toOpenAIMessages(messages: ChatMessage[], systemPrompt: string):
 export async function* sendMessage(
   params: SendMessageParams,
 ): AsyncGenerator<StreamEvent> {
-  const { provider, apiKey, systemPrompt, messages, tools } = params;
+  const { provider, apiKey, systemPrompt, messages, tools, maxTokens = 1024 } = params;
 
   const effectiveMessages: ChatMessage[] = messages.length === 0
     ? [{ role: 'user' as const, content: 'Begin the coaching session' }]
@@ -110,7 +111,7 @@ export async function* sendMessage(
     provider === 'anthropic'
       ? {
           model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
+          max_tokens: maxTokens,
           system: systemPrompt,
           messages: toAnthropicMessages(effectiveMessages),
           stream: true,
@@ -119,7 +120,7 @@ export async function* sendMessage(
       : {
           model: 'gpt-4o',
           messages: toOpenAIMessages(effectiveMessages, systemPrompt),
-          max_tokens: 1024,
+          max_tokens: maxTokens,
           stream: true,
           ...(openaiTools ? { tools: openaiTools } : {}),
         };

@@ -174,6 +174,44 @@ describe('sendMessage', () => {
     expect(body.stream).toBe(true);
   });
 
+  it('uses custom maxTokens for Anthropic when provided', async () => {
+    const stream = makeStream([
+      'event: content_block_delta\ndata: {"type":"content_block_delta","delta":{"type":"text_delta","text":"Hi"}}\n\n',
+      'event: message_stop\ndata: {"type":"message_stop"}\n\n',
+    ]);
+    fetchSpy.mockResolvedValue(new Response(stream, { status: 200 }));
+
+    for await (const _ of sendMessage({
+      provider: 'anthropic',
+      apiKey: 'sk-ant-test',
+      systemPrompt: 'test',
+      messages: [{ role: 'user', content: 'Hello' }],
+      maxTokens: 4096,
+    })) { /* consume */ }
+
+    const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+    expect(body.max_tokens).toBe(4096);
+  });
+
+  it('uses custom maxTokens for OpenAI when provided', async () => {
+    const stream = makeStream([
+      'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n',
+      'data: [DONE]\n\n',
+    ]);
+    fetchSpy.mockResolvedValue(new Response(stream, { status: 200 }));
+
+    for await (const _ of sendMessage({
+      provider: 'openai',
+      apiKey: 'sk-test',
+      systemPrompt: 'test',
+      messages: [{ role: 'user', content: 'Hello' }],
+      maxTokens: 2048,
+    })) { /* consume */ }
+
+    const body = JSON.parse(fetchSpy.mock.calls[0][1]?.body as string);
+    expect(body.max_tokens).toBe(2048);
+  });
+
   it('throws generic error on failure without leaking upstream body', async () => {
     fetchSpy.mockResolvedValue(new Response('{"error":"secret details"}', { status: 401 }));
 

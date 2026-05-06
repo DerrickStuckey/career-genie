@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, areAllStepsComplete } from '@/context/SessionContext';
 import { sendMessage } from '@/lib/llm-client';
-import { buildChatSystemPrompt } from '@/lib/prompts';
+import { buildChatSystemPrompt, RESUME_FORMATTING_SYSTEM_PROMPT } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
 import { ChatToolbar } from '@/components/ChatToolbar';
@@ -22,6 +22,7 @@ export default function ChatPage() {
   const [streaming, setStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [activePanel, setActivePanel] = useState<'answers' | 'rankings' | 'resume' | null>(null);
+  const [resumeJustUpdated, setResumeJustUpdated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
 
@@ -29,6 +30,7 @@ export default function ChatPage() {
     state.questionResponses,
     state.rankingState.sortedResult || [],
     state.resumeText,
+    state.updatedResumeMarkdown,
   );
 
   const MAX_TOOL_ROUNDS = 3;
@@ -36,6 +38,7 @@ export default function ChatPage() {
   async function runChatTurn(messages: ChatMessageType[]) {
     setStreaming(true);
     let currentRankings = state.rankingState.sortedResult || [];
+    let currentUpdatedResume = state.updatedResumeMarkdown;
     let currentSystemPrompt = systemPrompt;
     let currentMessages = messages;
 
@@ -50,6 +53,7 @@ export default function ChatPage() {
           systemPrompt: currentSystemPrompt,
           messages: currentMessages,
           tools: CHAT_TOOLS,
+          maxTokens: 2048,
         })) {
           if (event.type === 'text') {
             content += event.text;
@@ -77,6 +81,14 @@ export default function ChatPage() {
             });
             currentRankings = result.newRankings;
           }
+          if (result.newResume) {
+            dispatch({
+              type: 'SET_UPDATED_RESUME_MARKDOWN',
+              updatedResumeMarkdown: result.newResume,
+            });
+            currentUpdatedResume = result.newResume;
+            setResumeJustUpdated(true);
+          }
           toolResultMessages.push({
             role: 'user',
             content: result.resultText,
@@ -92,6 +104,7 @@ export default function ChatPage() {
           state.questionResponses,
           currentRankings,
           state.resumeText,
+          currentUpdatedResume,
         );
         currentMessages = [...currentMessages, assistantMsg, ...toolResultMessages];
         setStreamingContent('');
@@ -108,6 +121,31 @@ export default function ChatPage() {
     }
   }
 
+  async function initializeChat() {
+    if (state.resumeText.trim() && !state.updatedResumeMarkdown) {
+      try {
+        let formatted = '';
+        for await (const event of sendMessage({
+          provider: state.provider,
+          apiKey: state.apiKey,
+          systemPrompt: RESUME_FORMATTING_SYSTEM_PROMPT,
+          messages: [{ role: 'user' as const, content: state.resumeText }],
+          maxTokens: 4096,
+        })) {
+          if (event.type === 'text') {
+            formatted += event.text;
+          }
+        }
+        if (formatted.trim()) {
+          dispatch({ type: 'SET_UPDATED_RESUME_MARKDOWN', updatedResumeMarkdown: formatted });
+        }
+      } catch (error) {
+        console.warn('Resume formatting failed:', error);
+      }
+    }
+    runChatTurn([]);
+  }
+
   useEffect(() => {
     if (!areAllStepsComplete(state) || !state.apiKey) {
       router.replace(state.wizardStep === 'setup' ? '/' : '/next-steps');
@@ -116,7 +154,7 @@ export default function ChatPage() {
 
     if (!initializedRef.current && state.chatMessages.length === 0) {
       initializedRef.current = true;
-      runChatTurn([]);
+      initializeChat();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -124,6 +162,13 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.chatMessages, streamingContent]);
+
+  useEffect(() => {
+    if (resumeJustUpdated) {
+      const timer = setTimeout(() => setResumeJustUpdated(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [resumeJustUpdated]);
 
   async function handleSend(text: string) {
     const userMessage: ChatMessageType = { role: 'user', content: text };
@@ -136,6 +181,7 @@ export default function ChatPage() {
       state.questionResponses,
       state.rankingState.sortedResult,
       state.resumeText,
+      state.updatedResumeMarkdown,
     );
     if (md) downloadTextFile(md, 'career-genie-results.md');
   }
@@ -167,6 +213,17 @@ export default function ChatPage() {
         </div>
 
         <div className="sticky bottom-0 bg-stone-50 pt-2 pb-4">
+          {resumeJustUpdated && (
+            <div className="flex items-center justify-center gap-2 py-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg mb-2">
+              <span>Resume updated</span>
+              <button
+                onClick={() => setActivePanel('resume')}
+                className="underline font-medium hover:text-emerald-900"
+              >
+                View
+              </button>
+            </div>
+          )}
           <ChatInput
             onSend={handleSend}
             disabled={streaming}
@@ -199,7 +256,7 @@ export default function ChatPage() {
         open={activePanel === 'resume'}
         onClose={() => setActivePanel(null)}
       >
-        <ResumePanel resumeText={state.resumeText} />
+        <ResumePanel resumeText={state.resumeText} updatedResumeMarkdown={state.updatedResumeMarkdown} />
       </ChatPanel>
     </main>
   );

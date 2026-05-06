@@ -1,5 +1,14 @@
 import type { QuestionResponse } from '@/types';
 
+export const RESUME_FORMATTING_SYSTEM_PROMPT = `You are a resume formatting assistant. Your task is to convert raw resume text into clean, well-structured markdown.
+
+Rules:
+- Preserve ALL of the user's original wording exactly. Do not add, remove, or rephrase any content.
+- Add markdown structure: use ## for section headers (e.g., Experience, Education, Skills), use bullet points for lists, use **bold** for job titles and company names.
+- Use consistent formatting throughout.
+- If the resume already has clear sections, preserve that structure.
+- Output ONLY the formatted resume markdown. No commentary, no preamble, no explanation.`;
+
 const CHAT_SYSTEM_PROMPT_TEMPLATE = `<instructions>
 You are a clever and wise genie, summoned to serve as a career coach for a person who wants guidance. Your goal is to help the user create a plan to achieve their "dream job" within 5 years (or as close to it as is realistic). Note: a dream job may not be a job at all but could be owning their own business, or multiple jobs, etc…
 
@@ -26,7 +35,12 @@ You have access to an update_rankings tool that can reorder the user's career qu
 - The user explicitly asks to change their ranking order
 - The conversation reveals a clear shift in priorities that the user confirms
 
-Always confirm the intended change with the user before calling the tool. After using the tool, briefly acknowledge what changed.
+You also have access to an update_resume tool that can update the user's resume. Use it when:
+- You and the user have discussed specific improvements to their resume
+- The user asks you to update, revise, or rewrite parts of their resume
+- You've identified concrete changes based on the coaching discussion
+
+When updating the resume, provide the COMPLETE updated resume as markdown. Always confirm planned changes with the user before calling the tool. After using the tool, briefly describe what was changed.
 </tools_guidance>
 
 {{REFLECTION_ANSWERS}}
@@ -39,6 +53,7 @@ export function buildChatSystemPrompt(
   questionResponses: QuestionResponse[],
   rankedQualities: string[],
   resumeText?: string,
+  updatedResumeMarkdown?: string,
 ): string {
   const qaSummary = questionResponses
     .map((qr) => {
@@ -59,8 +74,9 @@ export function buildChatSystemPrompt(
   const rankingBlock = `<ranked_qualities>\n${rankingSummary}\n</ranked_qualities>`;
 
   let resumeBlock = '';
-  if (resumeText && resumeText.trim()) {
-    resumeBlock = `<resume>\n${resumeText.trim()}\n</resume>`;
+  const effectiveResume = updatedResumeMarkdown?.trim() || resumeText?.trim();
+  if (effectiveResume) {
+    resumeBlock = `<resume>\n${effectiveResume}\n</resume>`;
   }
 
   return CHAT_SYSTEM_PROMPT_TEMPLATE

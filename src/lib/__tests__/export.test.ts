@@ -53,6 +53,25 @@ describe('buildExportMarkdown', () => {
     const md = buildExportMarkdown(questionResponses, ['Salary'], '');
     expect(md).not.toContain('## Resume');
   });
+
+  it('includes Updated Resume section when updatedResumeMarkdown provided', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const md = buildExportMarkdown(questionResponses, ['Salary'], 'raw', '# Formatted Resume');
+    expect(md).toContain('## Resume');
+    expect(md).toContain('## Updated Resume');
+    expect(md).toContain('# Formatted Resume');
+  });
+
+  it('omits Updated Resume section when updatedResumeMarkdown is empty', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const md = buildExportMarkdown(questionResponses, ['Salary'], 'raw', '');
+    expect(md).toContain('## Resume');
+    expect(md).not.toContain('## Updated Resume');
+  });
 });
 
 describe('buildExportText', () => {

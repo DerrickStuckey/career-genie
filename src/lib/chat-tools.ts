@@ -20,7 +20,24 @@ export const UPDATE_RANKINGS_TOOL: ToolDefinition = {
   },
 };
 
-export const CHAT_TOOLS: ToolDefinition[] = [UPDATE_RANKINGS_TOOL];
+export const UPDATE_RESUME_TOOL: ToolDefinition = {
+  name: 'update_resume',
+  description:
+    'Update the user\'s resume. Provide the complete updated resume as a single markdown string. This performs a full replacement of the resume each time.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resume: {
+        type: 'string',
+        description:
+          'The complete updated resume in markdown format. Must be the full resume, not a partial update.',
+      },
+    },
+    required: ['resume'],
+  },
+};
+
+export const CHAT_TOOLS: ToolDefinition[] = [UPDATE_RANKINGS_TOOL, UPDATE_RESUME_TOOL];
 
 export function executeUpdateRankings(
   input: Record<string, unknown>,
@@ -60,15 +77,42 @@ export function executeUpdateRankings(
   return { success: true, resultText, newRankings };
 }
 
+export function executeUpdateResume(
+  input: Record<string, unknown>,
+): { success: boolean; resultText: string; newResume?: string } {
+  const resume = input.resume;
+
+  if (typeof resume !== 'string') {
+    return { success: false, resultText: 'Error: resume must be a string.' };
+  }
+
+  if (!resume.trim()) {
+    return { success: false, resultText: 'Error: resume must not be empty.' };
+  }
+
+  return {
+    success: true,
+    resultText: 'Resume updated successfully.',
+    newResume: resume,
+  };
+}
+
 export function executeToolCall(
   toolCall: ToolCall,
   currentRankings: string[],
-): { resultText: string; newRankings?: string[] } {
+): { resultText: string; newRankings?: string[]; newResume?: string } {
   if (toolCall.name === 'update_rankings') {
     const result = executeUpdateRankings(toolCall.input, currentRankings);
     return {
       resultText: result.resultText,
       newRankings: result.success ? result.newRankings : undefined,
+    };
+  }
+  if (toolCall.name === 'update_resume') {
+    const result = executeUpdateResume(toolCall.input);
+    return {
+      resultText: result.resultText,
+      newResume: result.success ? result.newResume : undefined,
     };
   }
   return { resultText: `Error: unknown tool "${toolCall.name}".` };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { executeUpdateRankings, CHAT_TOOLS } from '../chat-tools';
+import { executeUpdateRankings, executeUpdateResume, executeToolCall, CHAT_TOOLS } from '../chat-tools';
 
 const SAMPLE_ITEMS = [
   'High base compensation',
@@ -8,10 +8,10 @@ const SAMPLE_ITEMS = [
 ];
 
 describe('CHAT_TOOLS', () => {
-  it('exports update_rankings tool definition', () => {
-    expect(CHAT_TOOLS).toHaveLength(1);
-    expect(CHAT_TOOLS[0].name).toBe('update_rankings');
-    expect(CHAT_TOOLS[0].inputSchema).toBeDefined();
+  it('exports both tool definitions', () => {
+    expect(CHAT_TOOLS).toHaveLength(2);
+    expect(CHAT_TOOLS.map((t) => t.name)).toContain('update_rankings');
+    expect(CHAT_TOOLS.map((t) => t.name)).toContain('update_resume');
   });
 });
 
@@ -71,5 +71,63 @@ describe('executeUpdateRankings', () => {
       'High base compensation',
       'Work-life balance / flexible hours',
     ]);
+  });
+});
+
+describe('executeUpdateResume', () => {
+  it('accepts a valid resume string', () => {
+    const result = executeUpdateResume({ resume: '# John Doe\n\n## Experience\n...' });
+    expect(result.success).toBe(true);
+    expect(result.newResume).toBe('# John Doe\n\n## Experience\n...');
+    expect(result.resultText).toContain('updated successfully');
+  });
+
+  it('rejects non-string input', () => {
+    const result = executeUpdateResume({ resume: 123 });
+    expect(result.success).toBe(false);
+    expect(result.resultText).toContain('must be a string');
+  });
+
+  it('rejects empty string', () => {
+    const result = executeUpdateResume({ resume: '   ' });
+    expect(result.success).toBe(false);
+    expect(result.resultText).toContain('must not be empty');
+  });
+});
+
+describe('executeToolCall', () => {
+  it('routes update_rankings calls', () => {
+    const result = executeToolCall(
+      { id: 'tc_1', name: 'update_rankings', input: { rankings: ['Remote work options', 'High base compensation', 'Work-life balance / flexible hours'] } },
+      SAMPLE_ITEMS,
+    );
+    expect(result.newRankings).toBeDefined();
+    expect(result.resultText).toContain('Rankings updated');
+  });
+
+  it('routes update_resume calls', () => {
+    const result = executeToolCall(
+      { id: 'tc_2', name: 'update_resume', input: { resume: '# Resume' } },
+      [],
+    );
+    expect(result.newResume).toBe('# Resume');
+    expect(result.resultText).toContain('updated successfully');
+  });
+
+  it('returns no newResume on validation failure', () => {
+    const result = executeToolCall(
+      { id: 'tc_3', name: 'update_resume', input: { resume: '' } },
+      [],
+    );
+    expect(result.newResume).toBeUndefined();
+    expect(result.resultText).toContain('Error');
+  });
+
+  it('returns error for unknown tool', () => {
+    const result = executeToolCall(
+      { id: 'tc_4', name: 'unknown_tool', input: {} },
+      [],
+    );
+    expect(result.resultText).toContain('unknown tool');
   });
 });
