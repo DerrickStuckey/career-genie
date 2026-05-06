@@ -1,4 +1,5 @@
 import type { Provider, ChatMessage, ToolDefinition, StreamEvent } from '@/types';
+import { ANTHROPIC_CHAT_MODEL, OPENAI_CHAT_MODEL } from './models';
 
 interface SendMessageParams {
   provider: Provider;
@@ -6,6 +7,8 @@ interface SendMessageParams {
   systemPrompt: string;
   messages: ChatMessage[];
   tools?: ToolDefinition[];
+  maxTokens?: number;
+  model?: string;
 }
 
 function buildProviderRequest(
@@ -90,7 +93,7 @@ export function toOpenAIMessages(messages: ChatMessage[], systemPrompt: string):
 export async function* sendMessage(
   params: SendMessageParams,
 ): AsyncGenerator<StreamEvent> {
-  const { provider, apiKey, systemPrompt, messages, tools } = params;
+  const { provider, apiKey, systemPrompt, messages, tools, maxTokens = 1024, model } = params;
 
   const effectiveMessages: ChatMessage[] = messages.length === 0
     ? [{ role: 'user' as const, content: 'Begin the coaching session' }]
@@ -109,17 +112,17 @@ export async function* sendMessage(
   const body =
     provider === 'anthropic'
       ? {
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
+          model: model || ANTHROPIC_CHAT_MODEL,
+          max_tokens: maxTokens,
           system: systemPrompt,
           messages: toAnthropicMessages(effectiveMessages),
           stream: true,
           ...(anthropicTools ? { tools: anthropicTools } : {}),
         }
       : {
-          model: 'gpt-4o',
+          model: model || OPENAI_CHAT_MODEL,
           messages: toOpenAIMessages(effectiveMessages, systemPrompt),
-          max_tokens: 1024,
+          max_completion_tokens: maxTokens,
           stream: true,
           ...(openaiTools ? { tools: openaiTools } : {}),
         };
@@ -128,7 +131,13 @@ export async function* sendMessage(
   const response = await fetch(url, init);
 
   if (!response.ok) {
-    throw new Error('Chat request failed. Please check your API key and try again.');
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Chat request failed. Please check your API key and try again.');
+    }
+    if (response.status === 529) {
+      throw new Error('The AI provider is currently overloaded. Please try again in a moment.');
+    }
+    throw new Error(`Chat request failed (status ${response.status}). Please try again.`);
   }
 
   if (!response.body) throw new Error('No response body');
@@ -143,14 +152,20 @@ export async function* sendMessage(
 export async function validateApiKey(provider: Provider, apiKey: string): Promise<void> {
   const body =
     provider === 'anthropic'
-      ? { model: 'claude-sonnet-4-6', max_tokens: 16, system: 'Reply with exactly: ok', messages: [{ role: 'user', content: 'Hello' }] }
-      : { model: 'gpt-4o', messages: [{ role: 'system', content: 'Reply with exactly: ok' }, { role: 'user', content: 'Hello' }], max_tokens: 16 };
+      ? { model: ANTHROPIC_CHAT_MODEL, max_tokens: 16, system: 'Reply with exactly: ok', messages: [{ role: 'user', content: 'Hello' }] }
+      : { model: OPENAI_CHAT_MODEL, messages: [{ role: 'system', content: 'Reply with exactly: ok' }, { role: 'user', content: 'Hello' }], max_completion_tokens: 16 };
 
   const { url, init } = buildProviderRequest(provider, apiKey, body);
   const response = await fetch(url, init);
 
   if (!response.ok) {
-    throw new Error('Invalid API key. Please check your key and try again.');
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Invalid API key. Please check your key and try again.');
+    }
+    if (response.status === 529) {
+      throw new Error('The AI provider is currently overloaded. Please try again in a moment.');
+    }
+    throw new Error(`API key validation failed (status ${response.status}). Please try again.`);
   }
 }
 
@@ -177,7 +192,12 @@ export async function* parseAnthropicStream(
         try {
           const parsed = JSON.parse(data);
 
-          if (parsed.type === 'content_block_start' && parsed.content_block?.type === 'tool_use') {
+          if (parsed.type === 'error') {
+            const msg = parsed.error?.type === 'overloaded_error'
+              ? 'The AI provider is currently overloaded. Please try again in a moment.'
+              : parsed.error?.message || 'An unexpected error occurred.';
+            throw new Error(msg);
+          } else if (parsed.type === 'content_block_start' && parsed.content_block?.type === 'tool_use') {
             pendingToolCall = {
               id: parsed.content_block.id,
               name: parsed.content_block.name,
@@ -199,8 +219,9 @@ export async function* parseAnthropicStream(
             };
             pendingToolCall = null;
           }
-        } catch {
-          // skip non-JSON lines
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          throw e;
         }
       }
     }
@@ -257,8 +278,9 @@ export async function* parseOpenAIStream(
             }
             pendingToolCalls.clear();
           }
-        } catch {
-          // skip non-JSON lines
+        } catch (e) {
+          if (e instanceof SyntaxError) continue;
+          throw e;
         }
       }
     }

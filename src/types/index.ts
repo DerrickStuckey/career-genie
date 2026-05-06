@@ -47,6 +47,7 @@ export interface SessionState {
   wizardStep: WizardStep;
   questionResponses: QuestionResponse[];
   resumeText: string;
+  updatedResumeMarkdown: string;
   chatMessages: ChatMessage[];
   systemPrompt: string;
   rankingState: RankingState;
@@ -63,6 +64,7 @@ export type SessionAction =
   | { type: 'SET_QUESTION_COMPLETE'; questionId: number }
   | { type: 'SET_RANKING_STATE'; rankingState: Partial<RankingState> }
   | { type: 'SET_RESUME_TEXT'; resumeText: string }
+  | { type: 'SET_UPDATED_RESUME_MARKDOWN'; updatedResumeMarkdown: string }
   | { type: 'SET_RESULTS'; results: string }
-  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null; resumeText?: string }
+  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null; resumeText?: string; updatedResumeMarkdown?: string }
   | { type: 'RESET' };

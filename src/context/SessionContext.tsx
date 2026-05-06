@@ -46,6 +46,7 @@ export const initialState: SessionState = {
     isComplete: false,
   })),
   resumeText: '',
+  updatedResumeMarkdown: '',
   chatMessages: [],
   systemPrompt: '',
   rankingState: defaultRankingState,
@@ -68,6 +69,8 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       return { ...state, questionResponses: state.questionResponses.map((qr) => qr.questionId === action.questionId ? { ...qr, whyAnswer: action.whyAnswer } : qr) };
     case 'SET_RESUME_TEXT':
       return { ...state, resumeText: action.resumeText };
+    case 'SET_UPDATED_RESUME_MARKDOWN':
+      return { ...state, updatedResumeMarkdown: action.updatedResumeMarkdown };
     case 'SET_QUESTION_COMPLETE':
       return {
         ...state,
@@ -100,6 +103,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         questionResponses: action.questionResponses,
         rankingState,
         resumeText: action.resumeText || '',
+        updatedResumeMarkdown: action.updatedResumeMarkdown || '',
         wizardStep: 'hub',
       };
     }
