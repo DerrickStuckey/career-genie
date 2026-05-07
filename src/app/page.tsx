@@ -71,7 +71,15 @@ export default function WelcomePage() {
               coaching session in this app or in your AI Chat app of choice.
             </p>
             <p className="text-sm text-stone-400">
-              Your data never leaves your browser — nothing is stored or logged on our servers.
+              Your data never leaves your browser — nothing is stored or logged on our servers. Prefer to run locally anyway? This app is{' '}
+              <a
+                href="https://github.com/DerrickStuckey/career-genie"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-600 hover:text-emerald-700 underline"
+              >
+                open-source on GitHub
+              </a>.
             </p>
             <button
               onClick={handleStart}
