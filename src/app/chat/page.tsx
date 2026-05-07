@@ -7,6 +7,7 @@ import { sendMessage } from '@/lib/llm-client';
 import { buildChatSystemPrompt, RESUME_FORMATTING_SYSTEM_PROMPT } from '@/lib/prompts';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ChatInput } from '@/components/ChatInput';
+import { ChatOptions } from '@/components/ChatOptions';
 import { ChatToolbar } from '@/components/ChatToolbar';
 import { ChatPanel } from '@/components/ChatPanel';
 import { AnswersPanel } from '@/components/AnswersPanel';
@@ -15,7 +16,7 @@ import { ResumePanel } from '@/components/ResumePanel';
 import { CHAT_TOOLS, executeToolCall } from '@/lib/chat-tools';
 import { buildExportMarkdown, downloadTextFile } from '@/lib/export';
 import { ANTHROPIC_FAST_MODEL, OPENAI_FAST_MODEL } from '@/lib/models';
-import type { ChatMessage as ChatMessageType, ToolCall } from '@/types';
+import type { ChatMessage as ChatMessageType, PresentedOption, ToolCall } from '@/types';
 
 export default function ChatPage() {
   const { state, dispatch } = useSession();
@@ -67,6 +68,32 @@ export default function ChatPage() {
 
         if (toolCalls.length === 0) {
           dispatch({ type: 'ADD_CHAT_MESSAGE', message: { role: 'assistant', content } });
+          break;
+        }
+
+        const hasPresentOptions = toolCalls.some((tc) => tc.name === 'present_options');
+        const hasOtherTools = toolCalls.some((tc) => tc.name !== 'present_options');
+
+        if (hasPresentOptions && hasOtherTools) {
+          const assistantMsg: ChatMessageType = { role: 'assistant', content, toolCalls };
+          dispatch({ type: 'ADD_CHAT_MESSAGE', message: assistantMsg });
+          const errorResultMessages: ChatMessageType[] = toolCalls.map((tc) => ({
+            role: 'user' as const,
+            content:
+              'Error: present_options cannot be combined with other tool calls. Use present_options in a separate response.',
+            toolResult: { toolUseId: tc.id },
+          }));
+          for (const trm of errorResultMessages) {
+            dispatch({ type: 'ADD_CHAT_MESSAGE', message: trm });
+          }
+          currentMessages = [...currentMessages, assistantMsg, ...errorResultMessages];
+          setStreamingContent('');
+          continue;
+        }
+
+        if (hasPresentOptions) {
+          const assistantMsg: ChatMessageType = { role: 'assistant', content, toolCalls };
+          dispatch({ type: 'ADD_CHAT_MESSAGE', message: assistantMsg });
           break;
         }
 
@@ -178,10 +205,38 @@ export default function ChatPage() {
     }
   }, [resumeJustUpdated]);
 
+  function getPendingOptionToolResult(
+    messages: ChatMessageType[],
+    userText: string,
+  ): ChatMessageType | null {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.toolResult) continue;
+      if (msg.role === 'user') return null;
+      if (msg.role === 'assistant') {
+        const tc = msg.toolCalls?.find((t) => t.name === 'present_options');
+        if (!tc) return null;
+        return {
+          role: 'user',
+          content: `User selected: ${userText}`,
+          toolResult: { toolUseId: tc.id },
+        };
+      }
+    }
+    return null;
+  }
+
   async function handleSend(text: string) {
+    const pendingResult = getPendingOptionToolResult(state.chatMessages, text);
+    if (pendingResult) {
+      dispatch({ type: 'ADD_CHAT_MESSAGE', message: pendingResult });
+    }
     const userMessage: ChatMessageType = { role: 'user', content: text };
     dispatch({ type: 'ADD_CHAT_MESSAGE', message: userMessage });
-    runChatTurn([...state.chatMessages, userMessage]);
+    const allMessages = pendingResult
+      ? [...state.chatMessages, pendingResult, userMessage]
+      : [...state.chatMessages, userMessage];
+    runChatTurn(allMessages);
   }
 
   function handleDownload() {
@@ -210,10 +265,47 @@ export default function ChatPage() {
 
         <div className="flex-1 overflow-y-auto space-y-1">
           {state.chatMessages
-            .filter((msg) => !msg.toolResult)
-            .map((msg, i) => (
-              <ChatMessage key={i} message={msg} />
-            ))}
+            .map((msg, idx) => ({ msg, idx }))
+            .filter(({ msg }) => !msg.toolResult)
+            .map(({ msg, idx }) => {
+              let optionState: {
+                options: PresentedOption[];
+                disabled: boolean;
+                selectedTitle: string | null;
+              } | null = null;
+
+              if (msg.role === 'assistant') {
+                const tc = msg.toolCalls?.find((t) => t.name === 'present_options');
+                if (tc) {
+                  const options = (tc.input.options as PresentedOption[]) || [];
+                  let disabled = streaming;
+                  let selectedTitle: string | null = null;
+                  for (let j = idx + 1; j < state.chatMessages.length; j++) {
+                    const m = state.chatMessages[j];
+                    if (m.role === 'user' && !m.toolResult) {
+                      disabled = true;
+                      selectedTitle = options.find((o) => o.title === m.content)?.title ?? null;
+                      break;
+                    }
+                  }
+                  optionState = { options, disabled, selectedTitle };
+                }
+              }
+
+              return (
+                <div key={idx}>
+                  <ChatMessage message={msg} />
+                  {optionState && (
+                    <ChatOptions
+                      options={optionState.options}
+                      onSelect={handleSend}
+                      disabled={optionState.disabled}
+                      selectedTitle={optionState.selectedTitle}
+                    />
+                  )}
+                </div>
+              );
+            })}
           {formattingResume && (
             <p className="text-center text-sm text-stone-400 py-8">Preparing your resume...</p>
           )}
