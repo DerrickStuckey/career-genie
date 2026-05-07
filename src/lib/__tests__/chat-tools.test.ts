@@ -8,10 +8,11 @@ const SAMPLE_ITEMS = [
 ];
 
 describe('CHAT_TOOLS', () => {
-  it('exports both tool definitions', () => {
-    expect(CHAT_TOOLS).toHaveLength(2);
+  it('exports all tool definitions', () => {
+    expect(CHAT_TOOLS).toHaveLength(3);
     expect(CHAT_TOOLS.map((t) => t.name)).toContain('update_rankings');
     expect(CHAT_TOOLS.map((t) => t.name)).toContain('update_resume');
+    expect(CHAT_TOOLS.map((t) => t.name)).toContain('present_options');
   });
 });
 

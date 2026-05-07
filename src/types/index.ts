@@ -14,6 +14,11 @@ export interface ToolDefinition {
   inputSchema: Record<string, unknown>;
 }
 
+export interface PresentedOption {
+  title: string;
+  description: string;
+}
+
 export type StreamEvent =
   | { type: 'text'; text: string }
   | { type: 'tool_call'; id: string; name: string; input: Record<string, unknown> };
