@@ -2,6 +2,8 @@ import type { ChatMessage as ChatMessageType } from '@/types';
 import ReactMarkdown from 'react-markdown';
 
 export function ChatMessage({ message }: { message: ChatMessageType }) {
+  if (message.toolResult) return null;
+
   const isUser = message.role === 'user';
 
   return (

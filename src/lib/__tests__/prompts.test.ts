@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildChatSystemPrompt } from '../prompts';
+import { buildChatSystemPrompt, RESUME_FORMATTING_SYSTEM_PROMPT } from '../prompts';
 
 describe('buildChatSystemPrompt', () => {
   it('injects question responses and rankings into system prompt', () => {
@@ -72,5 +72,39 @@ describe('buildChatSystemPrompt', () => {
     ];
     const result = buildChatSystemPrompt(questionResponses, ['A'], 'My resume');
     expect(result).not.toContain('Obtain Resume');
+  });
+
+  it('prefers updatedResumeMarkdown over resumeText in resume block', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const result = buildChatSystemPrompt(questionResponses, ['A'], 'raw resume', '# Formatted Resume');
+    expect(result).toContain('# Formatted Resume');
+    expect(result).not.toContain('raw resume');
+  });
+
+  it('falls back to resumeText when updatedResumeMarkdown is empty', () => {
+    const questionResponses = [
+      { questionId: 0, question: 'Q1', answer: 'A1', whyAnswer: '', isComplete: true },
+    ];
+    const result = buildChatSystemPrompt(questionResponses, ['A'], 'raw resume', '');
+    expect(result).toContain('raw resume');
+  });
+
+  it('omits resume block when both resumeText and updatedResumeMarkdown are empty', () => {
+    const result = buildChatSystemPrompt([], [], '', '');
+    expect(result).not.toContain('<resume>');
+  });
+
+  it('includes update_resume in tools guidance', () => {
+    const result = buildChatSystemPrompt([], []);
+    expect(result).toContain('update_resume');
+  });
+});
+
+describe('RESUME_FORMATTING_SYSTEM_PROMPT', () => {
+  it('mentions markdown and preservation of original wording', () => {
+    expect(RESUME_FORMATTING_SYSTEM_PROMPT).toContain('markdown');
+    expect(RESUME_FORMATTING_SYSTEM_PROMPT).toContain('Preserve ALL');
   });
 });

@@ -2,9 +2,27 @@ export type Provider = 'anthropic' | 'openai';
 
 export type WizardStep = 'setup' | 'hub' | 'questions' | 'rank' | 'resume' | 'next-steps' | 'chat';
 
+export interface ToolCall {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export type StreamEvent =
+  | { type: 'text'; text: string }
+  | { type: 'tool_call'; id: string; name: string; input: Record<string, unknown> };
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  toolCalls?: ToolCall[];
+  toolResult?: { toolUseId: string };
 }
 
 export interface QuestionResponse {
@@ -29,6 +47,7 @@ export interface SessionState {
   wizardStep: WizardStep;
   questionResponses: QuestionResponse[];
   resumeText: string;
+  updatedResumeMarkdown: string;
   chatMessages: ChatMessage[];
   systemPrompt: string;
   rankingState: RankingState;
@@ -45,6 +64,7 @@ export type SessionAction =
   | { type: 'SET_QUESTION_COMPLETE'; questionId: number }
   | { type: 'SET_RANKING_STATE'; rankingState: Partial<RankingState> }
   | { type: 'SET_RESUME_TEXT'; resumeText: string }
+  | { type: 'SET_UPDATED_RESUME_MARKDOWN'; updatedResumeMarkdown: string }
   | { type: 'SET_RESULTS'; results: string }
-  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null; resumeText?: string }
+  | { type: 'RESTORE_SESSION'; questionResponses: QuestionResponse[]; sortedResult: string[] | null; resumeText?: string; updatedResumeMarkdown?: string }
   | { type: 'RESET' };

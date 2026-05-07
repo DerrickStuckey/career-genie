@@ -47,6 +47,11 @@ describe('sessionReducer', () => {
     expect(state.resumeText).toBe('My resume content...');
   });
 
+  it('sets updated resume markdown', () => {
+    const state = sessionReducer(initialState, { type: 'SET_UPDATED_RESUME_MARKDOWN', updatedResumeMarkdown: '# Resume\n\n## Experience' });
+    expect(state.updatedResumeMarkdown).toBe('# Resume\n\n## Experience');
+  });
+
   it('merges partial ranking state', () => {
     const state = sessionReducer(initialState, { type: 'SET_RANKING_STATE', rankingState: { completedComparisons: 5 } });
     expect(state.rankingState.completedComparisons).toBe(5);
@@ -116,6 +121,32 @@ describe('sessionReducer', () => {
       sortedResult: null,
     });
     expect(state.resumeText).toBe('');
+  });
+
+  it('restores session with updatedResumeMarkdown', () => {
+    const state = sessionReducer(initialState, {
+      type: 'RESTORE_SESSION',
+      questionResponses: initialState.questionResponses,
+      sortedResult: null,
+      resumeText: 'raw',
+      updatedResumeMarkdown: '# Formatted',
+    });
+    expect(state.updatedResumeMarkdown).toBe('# Formatted');
+  });
+
+  it('restores session without updatedResumeMarkdown (backward compat)', () => {
+    const state = sessionReducer(initialState, {
+      type: 'RESTORE_SESSION',
+      questionResponses: initialState.questionResponses,
+      sortedResult: null,
+    });
+    expect(state.updatedResumeMarkdown).toBe('');
+  });
+
+  it('resets updatedResumeMarkdown', () => {
+    let state = sessionReducer(initialState, { type: 'SET_UPDATED_RESUME_MARKDOWN', updatedResumeMarkdown: '# Resume' });
+    state = sessionReducer(state, { type: 'RESET' });
+    expect(state.updatedResumeMarkdown).toBe('');
   });
 });
 

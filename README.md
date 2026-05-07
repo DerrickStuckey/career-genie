@@ -17,6 +17,8 @@ Very loosely based on [Graham Weaver](https://www.grahamweaver.com/blog/the-comm
 
 No API key is needed until you opt into the in-app chat. When you do, your key is sent directly from the browser to the AI provider and never touches our servers. All resume parsing also happens client-side.
 
+**Your data stays on your device.** No user-inputted data — answers, rankings, resume content, or API keys — is ever stored or logged server-side. Everything runs entirely in your browser.
+
 ## Tech Stack
 
 Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · Vitest · Vercel

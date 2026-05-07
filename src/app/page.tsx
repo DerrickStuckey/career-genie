@@ -71,7 +71,7 @@ export default function WelcomePage() {
               coaching session in this app or in your AI Chat app of choice.
             </p>
             <p className="text-sm text-stone-400">
-              Prefer to run locally? This app is{' '}
+              Your data never leaves your browser — nothing is stored or logged on our servers. Prefer to run locally anyway? This app is{' '}
               <a
                 href="https://github.com/DerrickStuckey/career-genie"
                 target="_blank"

@@ -5,6 +5,7 @@ export function buildExportMarkdown(
   questionResponses: QuestionResponse[],
   rankedQualities: string[] | null,
   resumeText?: string,
+  updatedResumeMarkdown?: string,
 ): string {
   const sections: string[] = [];
 
@@ -34,6 +35,10 @@ export function buildExportMarkdown(
     sections.push('## Resume\n\n' + resumeText.trim());
   }
 
+  if (updatedResumeMarkdown && updatedResumeMarkdown.trim()) {
+    sections.push('## Updated Resume\n\n' + updatedResumeMarkdown.trim());
+  }
+
   if (sections.length <= 2) return '';
 
   return sections.join('\n\n') + '\n';
@@ -43,8 +48,9 @@ export function buildCopyablePrompt(
   questionResponses: QuestionResponse[],
   rankedQualities: string[] | null,
   resumeText?: string,
+  updatedResumeMarkdown?: string,
 ): string {
-  return buildChatSystemPrompt(questionResponses, rankedQualities || [], resumeText)
+  return buildChatSystemPrompt(questionResponses, rankedQualities || [], resumeText, updatedResumeMarkdown)
     + '\n\nBegin the coaching session.';
 }
 
