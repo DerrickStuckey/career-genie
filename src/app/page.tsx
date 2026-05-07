@@ -70,6 +70,17 @@ export default function WelcomePage() {
               priorities, and upload your resume. Then start an open-ended
               coaching session in this app or in your AI Chat app of choice.
             </p>
+            <p className="text-sm text-stone-400">
+              Prefer to run locally? This app is{' '}
+              <a
+                href="https://github.com/DerrickStuckey/career-genie"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-600 hover:text-emerald-700 underline"
+              >
+                open-source on GitHub
+              </a>.
+            </p>
             <button
               onClick={handleStart}
               className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white hover:bg-emerald-600 transition-colors"
