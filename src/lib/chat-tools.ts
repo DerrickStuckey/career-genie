@@ -37,7 +37,33 @@ export const UPDATE_RESUME_TOOL: ToolDefinition = {
   },
 };
 
-export const CHAT_TOOLS: ToolDefinition[] = [UPDATE_RANKINGS_TOOL, UPDATE_RESUME_TOOL];
+export const PRESENT_OPTIONS_TOOL: ToolDefinition = {
+  name: 'present_options',
+  description:
+    'Present 2-4 clickable options to the user. Use this when asking the user to choose between distinct alternatives (e.g., dream job scenarios, plan directions). Do NOT also list the options as numbered items in the text.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      options: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            title: { type: 'string', description: 'Short label for the option' },
+            description: { type: 'string', description: 'One-sentence description' },
+          },
+          required: ['title', 'description'],
+        },
+        minItems: 2,
+        maxItems: 4,
+        description: 'The options to present to the user.',
+      },
+    },
+    required: ['options'],
+  },
+};
+
+export const CHAT_TOOLS: ToolDefinition[] = [UPDATE_RANKINGS_TOOL, UPDATE_RESUME_TOOL, PRESENT_OPTIONS_TOOL];
 
 export function executeUpdateRankings(
   input: Record<string, unknown>,

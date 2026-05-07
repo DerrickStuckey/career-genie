@@ -18,6 +18,11 @@ export type StreamEvent =
   | { type: 'text'; text: string }
   | { type: 'tool_call'; id: string; name: string; input: Record<string, unknown> };
 
+export interface PresentedOption {
+  title: string;
+  description: string;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
