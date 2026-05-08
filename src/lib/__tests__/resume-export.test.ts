@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseResumeMarkdown, parseInlineFormatting, generateResumeDocx } from '../resume-export';
+import { parseResumeMarkdown, parseInlineFormatting, generateResumeDocx, generateResumePdf } from '../resume-export';
 
 describe('parseInlineFormatting', () => {
   it('parses bold text', () => {
@@ -117,5 +117,21 @@ describe('generateResumeDocx', () => {
     expect(blob).toBeInstanceOf(Blob);
     expect(blob.size).toBeGreaterThan(0);
     expect(blob.type).toBe('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  });
+});
+
+describe('generateResumePdf', () => {
+  it('returns a jsPDF document', () => {
+    const md = `# Test Person
+*test@email.com*
+
+## Experience
+
+- **Developer** at **Company** (2020-2024)
+  - Did great work`;
+
+    const doc = generateResumePdf(md);
+    expect(doc).toBeDefined();
+    expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
   });
 });

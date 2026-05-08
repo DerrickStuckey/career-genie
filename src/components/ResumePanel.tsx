@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { downloadTextFile } from '@/lib/export';
-import { generateResumeDocx, openResumePrintView, downloadBlob } from '@/lib/resume-export';
+import { generateResumeDocx, generateResumePdf, downloadBlob } from '@/lib/resume-export';
 
 interface ResumePanelProps {
   resumeText: string;
@@ -34,8 +34,9 @@ export function ResumePanel({ resumeText, updatedResumeMarkdown }: ResumePanelPr
     }
   }
 
-  function handlePrintPdf() {
-    openResumePrintView(updatedResumeMarkdown);
+  function handleDownloadPdf() {
+    const doc = generateResumePdf(updatedResumeMarkdown);
+    doc.save('resume.pdf');
   }
 
   if (!hasUpdated) {
@@ -68,7 +69,7 @@ export function ResumePanel({ resumeText, updatedResumeMarkdown }: ResumePanelPr
             {generatingDocx ? '...' : '.docx'}
           </button>
           <button
-            onClick={handlePrintPdf}
+            onClick={handleDownloadPdf}
             className="text-xs px-2.5 py-1 border border-stone-300 text-stone-600 rounded hover:bg-stone-100"
           >
             PDF

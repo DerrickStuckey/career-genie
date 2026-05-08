@@ -212,89 +212,177 @@ export async function generateResumeDocx(markdown: string): Promise<Blob> {
   return Packer.toBlob(doc);
 }
 
-function markdownToHtml(md: string): string {
-  const nodes = parseResumeMarkdown(md);
-  const parts: string[] = [];
+import { jsPDF } from 'jspdf';
 
-  for (const node of nodes) {
-    const escaped = node.raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const formatted = escaped
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+const PAGE_WIDTH = 210;
+const PAGE_HEIGHT = 297;
+const MARGIN = 15;
+const CONTENT_WIDTH = PAGE_WIDTH - 2 * MARGIN;
 
-    switch (node.type) {
-      case 'name':
-        parts.push(`<h1>${formatted}</h1>`);
-        break;
-      case 'contact':
-        parts.push(`<p class="contact"><em>${node.raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</em></p>`);
-        break;
-      case 'section':
-        parts.push(`<h2>${formatted}</h2>`);
-        break;
-      case 'bullet':
-        parts.push(`<li>${formatted}</li>`);
-        break;
-      case 'nested-bullet':
-        parts.push(`<li class="nested">${formatted}</li>`);
-        break;
-      case 'rule':
-        parts.push('<hr>');
-        break;
-      case 'text':
-        parts.push(`<p>${formatted}</p>`);
-        break;
-    }
+function addPageIfNeeded(doc: jsPDF, y: number, lineHeight: number): number {
+  if (y + lineHeight > PAGE_HEIGHT - MARGIN) {
+    doc.addPage();
+    return MARGIN;
   }
-
-  let html = '';
-  let inList = false;
-  for (const part of parts) {
-    if (part.startsWith('<li')) {
-      if (!inList) {
-        html += '<ul>';
-        inList = true;
-      }
-      html += part;
-    } else {
-      if (inList) {
-        html += '</ul>';
-        inList = false;
-      }
-      html += part;
-    }
-  }
-  if (inList) html += '</ul>';
-
-  return html;
+  return y;
 }
 
-const PRINT_STYLES = `
-  body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #1a1a1a; line-height: 1.4; font-size: 11pt; }
-  h1 { text-align: center; font-size: 24pt; margin: 0 0 4px; }
-  .contact { text-align: center; color: #555; font-size: 10pt; margin: 0 0 16px; }
-  h2 { font-size: 13pt; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin: 16px 0 8px; }
-  ul { padding-left: 20px; margin: 4px 0; }
-  li { margin: 2px 0; }
-  li.nested { margin-left: 16px; }
-  hr { border: none; border-top: 1px solid #aaa; margin: 12px 0; }
-  p { margin: 4px 0; }
-  strong { font-weight: 600; }
-  em { font-style: italic; color: #555; }
-  @media print { body { padding: 0; } }
-`;
+function renderSegments(
+  doc: jsPDF,
+  segments: TextSegment[],
+  x: number,
+  y: number,
+  fontSize: number,
+  maxWidth: number,
+): number {
+  doc.setFontSize(fontSize);
+  const lineHeight = fontSize * 0.45;
 
-export function openResumePrintView(markdown: string): void {
-  const html = markdownToHtml(markdown);
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
+  const fullText = segments.map((s) => s.text).join('');
+  const wrappedLines = doc.splitTextToSize(fullText, maxWidth) as string[];
 
-  printWindow.document.write(`<!DOCTYPE html>
-<html><head><title>Resume</title><style>${PRINT_STYLES}</style></head>
-<body>${html}</body></html>`);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
+  for (const line of wrappedLines) {
+    y = addPageIfNeeded(doc, y, lineHeight);
+
+    let lineX = x;
+    let remaining = line;
+
+    for (const seg of segments) {
+      if (!remaining || !seg.text) continue;
+
+      let chunk = '';
+      if (remaining.startsWith(seg.text)) {
+        chunk = seg.text;
+        remaining = remaining.slice(chunk.length);
+      } else if (seg.text.startsWith(remaining)) {
+        chunk = remaining;
+        remaining = '';
+      } else {
+        const idx = remaining.indexOf(seg.text);
+        if (idx === 0) {
+          chunk = seg.text;
+          remaining = remaining.slice(chunk.length);
+        } else if (idx > 0) {
+          continue;
+        } else {
+          const overlap = seg.text.slice(0, remaining.length);
+          if (remaining.startsWith(overlap)) {
+            chunk = remaining;
+            remaining = '';
+          } else {
+            continue;
+          }
+        }
+      }
+
+      if (!chunk) continue;
+
+      const style = seg.bold && seg.italic ? 'bolditalic' : seg.bold ? 'bold' : seg.italic ? 'italic' : 'normal';
+      doc.setFont('helvetica', style);
+      if (seg.italic && !seg.bold) {
+        doc.setTextColor(85, 85, 85);
+      } else {
+        doc.setTextColor(26, 26, 26);
+      }
+      doc.text(chunk, lineX, y);
+      lineX += doc.getTextWidth(chunk);
+    }
+
+    y += lineHeight;
+  }
+
+  return y;
+}
+
+export function generateResumePdf(markdown: string): jsPDF {
+  const nodes = parseResumeMarkdown(markdown);
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  let y = MARGIN;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(26, 26, 26);
+
+  for (const node of nodes) {
+    switch (node.type) {
+      case 'name': {
+        y = addPageIfNeeded(doc, y, 12);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(26, 26, 26);
+        doc.text(node.raw, PAGE_WIDTH / 2, y, { align: 'center' });
+        y += 8;
+        break;
+      }
+
+      case 'contact': {
+        y = addPageIfNeeded(doc, y, 6);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(85, 85, 85);
+        doc.text(node.raw, PAGE_WIDTH / 2, y, { align: 'center' });
+        y += 6;
+        break;
+      }
+
+      case 'section': {
+        y += 3;
+        y = addPageIfNeeded(doc, y, 8);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(26, 26, 26);
+        doc.text(node.raw, MARGIN, y);
+        y += 1;
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+        y += 4;
+        break;
+      }
+
+      case 'bullet': {
+        y = addPageIfNeeded(doc, y, 5);
+        doc.setFontSize(9.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(26, 26, 26);
+        doc.text('•', MARGIN + 2, y);
+        const bulletIndent = MARGIN + 6;
+        y = renderSegments(doc, node.segments || [{ text: node.raw }], bulletIndent, y, 9.5, CONTENT_WIDTH - 6);
+        y += 0.5;
+        break;
+      }
+
+      case 'nested-bullet': {
+        y = addPageIfNeeded(doc, y, 5);
+        doc.setFontSize(9.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(26, 26, 26);
+        doc.text('–', MARGIN + 8, y);
+        const nestedIndent = MARGIN + 12;
+        y = renderSegments(doc, node.segments || [{ text: node.raw }], nestedIndent, y, 9.5, CONTENT_WIDTH - 12);
+        y += 0.5;
+        break;
+      }
+
+      case 'rule': {
+        y += 2;
+        y = addPageIfNeeded(doc, y, 4);
+        doc.setDrawColor(170, 170, 170);
+        doc.setLineWidth(0.3);
+        doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
+        y += 4;
+        break;
+      }
+
+      case 'text': {
+        y = addPageIfNeeded(doc, y, 5);
+        y = renderSegments(doc, node.segments || [{ text: node.raw }], MARGIN, y, 9.5, CONTENT_WIDTH);
+        y += 1;
+        break;
+      }
+    }
+  }
+
+  return doc;
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {
