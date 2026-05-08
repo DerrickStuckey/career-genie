@@ -34,8 +34,8 @@ export function ResumePanel({ resumeText, updatedResumeMarkdown }: ResumePanelPr
     }
   }
 
-  function handleDownloadPdf() {
-    const doc = generateResumePdf(updatedResumeMarkdown);
+  async function handleDownloadPdf() {
+    const doc = await generateResumePdf(updatedResumeMarkdown);
     doc.save('resume.pdf');
   }
 

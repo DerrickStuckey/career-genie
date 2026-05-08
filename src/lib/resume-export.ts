@@ -1,11 +1,7 @@
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  AlignmentType,
-  HeadingLevel,
-  BorderStyle,
+import type {
+  Document as DocxDocument,
+  Paragraph as DocxParagraph,
+  TextRun as DocxTextRun,
 } from 'docx';
 
 export interface ResumeNode {
@@ -79,7 +75,11 @@ export function parseResumeMarkdown(md: string): ResumeNode[] {
   return nodes;
 }
 
-function segmentsToTextRuns(segments: TextSegment[], baseFontSize: number): TextRun[] {
+function segmentsToTextRuns(
+  segments: TextSegment[],
+  baseFontSize: number,
+  TextRun: typeof DocxTextRun,
+): DocxTextRun[] {
   return segments.map(
     (seg) =>
       new TextRun({
@@ -93,8 +93,11 @@ function segmentsToTextRuns(segments: TextSegment[], baseFontSize: number): Text
 }
 
 export async function generateResumeDocx(markdown: string): Promise<Blob> {
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, BorderStyle } =
+    await import('docx');
+
   const nodes = parseResumeMarkdown(markdown);
-  const paragraphs: Paragraph[] = [];
+  const paragraphs: DocxParagraph[] = [];
 
   for (const node of nodes) {
     switch (node.type) {
@@ -158,7 +161,7 @@ export async function generateResumeDocx(markdown: string): Promise<Blob> {
           new Paragraph({
             bullet: { level: 0 },
             spacing: { after: 40 },
-            children: segmentsToTextRuns(node.segments || [{ text: node.raw }], 11),
+            children: segmentsToTextRuns(node.segments || [{ text: node.raw }], 11, TextRun),
           }),
         );
         break;
@@ -168,7 +171,7 @@ export async function generateResumeDocx(markdown: string): Promise<Blob> {
           new Paragraph({
             bullet: { level: 1 },
             spacing: { after: 40 },
-            children: segmentsToTextRuns(node.segments || [{ text: node.raw }], 11),
+            children: segmentsToTextRuns(node.segments || [{ text: node.raw }], 11, TextRun),
           }),
         );
         break;
@@ -189,7 +192,7 @@ export async function generateResumeDocx(markdown: string): Promise<Blob> {
         paragraphs.push(
           new Paragraph({
             spacing: { after: 60 },
-            children: segmentsToTextRuns(node.segments || [{ text: node.raw }], 11),
+            children: segmentsToTextRuns(node.segments || [{ text: node.raw }], 11, TextRun),
           }),
         );
         break;
@@ -212,7 +215,7 @@ export async function generateResumeDocx(markdown: string): Promise<Blob> {
   return Packer.toBlob(doc);
 }
 
-import { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
@@ -294,9 +297,10 @@ function renderSegments(
   return y;
 }
 
-export function generateResumePdf(markdown: string): jsPDF {
+export async function generateResumePdf(markdown: string): Promise<jsPDF> {
+  const { jsPDF: JsPDF } = await import('jspdf');
   const nodes = parseResumeMarkdown(markdown);
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const doc = new JsPDF({ unit: 'mm', format: 'a4' });
   let y = MARGIN;
 
   doc.setFont('helvetica', 'normal');

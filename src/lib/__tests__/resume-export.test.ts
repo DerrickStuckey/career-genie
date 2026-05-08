@@ -121,7 +121,7 @@ describe('generateResumeDocx', () => {
 });
 
 describe('generateResumePdf', () => {
-  it('returns a jsPDF document', () => {
+  it('returns a jsPDF document', async () => {
     const md = `# Test Person
 *test@email.com*
 
@@ -130,7 +130,7 @@ describe('generateResumePdf', () => {
 - **Developer** at **Company** (2020-2024)
   - Did great work`;
 
-    const doc = generateResumePdf(md);
+    const doc = await generateResumePdf(md);
     expect(doc).toBeDefined();
     expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
   });
