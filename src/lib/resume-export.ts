@@ -230,6 +230,22 @@ function addPageIfNeeded(doc: jsPDF, y: number, lineHeight: number): number {
   return y;
 }
 
+interface StyledWord {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+}
+
+function setSegmentStyle(doc: jsPDF, word: StyledWord) {
+  const style = word.bold && word.italic ? 'bolditalic' : word.bold ? 'bold' : word.italic ? 'italic' : 'normal';
+  doc.setFont('helvetica', style);
+  if (word.italic && !word.bold) {
+    doc.setTextColor(85, 85, 85);
+  } else {
+    doc.setTextColor(26, 26, 26);
+  }
+}
+
 function renderSegments(
   doc: jsPDF,
   segments: TextSegment[],
@@ -241,54 +257,45 @@ function renderSegments(
   doc.setFontSize(fontSize);
   const lineHeight = fontSize * 0.45;
 
-  const fullText = segments.map((s) => s.text).join('');
-  const wrappedLines = doc.splitTextToSize(fullText, maxWidth) as string[];
+  const words: StyledWord[] = [];
+  for (const seg of segments) {
+    if (!seg.text) continue;
+    for (const w of seg.text.split(/\s+/).filter((s) => s.length > 0)) {
+      words.push({ text: w, bold: seg.bold, italic: seg.italic });
+    }
+  }
+  if (words.length === 0) return y;
 
-  for (const line of wrappedLines) {
+  doc.setFont('helvetica', 'normal');
+  const spaceWidth = doc.getTextWidth(' ');
+
+  const lines: StyledWord[][] = [[]];
+  let lineWidth = 0;
+
+  for (const word of words) {
+    setSegmentStyle(doc, word);
+    const wWidth = doc.getTextWidth(word.text);
+    const needed = lines[lines.length - 1].length === 0 ? wWidth : spaceWidth + wWidth;
+
+    if (lineWidth + needed > maxWidth && lines[lines.length - 1].length > 0) {
+      lines.push([]);
+      lineWidth = 0;
+    }
+
+    if (lines[lines.length - 1].length > 0) lineWidth += spaceWidth;
+    lines[lines.length - 1].push(word);
+    lineWidth += wWidth;
+  }
+
+  for (const line of lines) {
     y = addPageIfNeeded(doc, y, lineHeight);
-
     let lineX = x;
-    let remaining = line;
 
-    for (const seg of segments) {
-      if (!remaining || !seg.text) continue;
-
-      let chunk = '';
-      if (remaining.startsWith(seg.text)) {
-        chunk = seg.text;
-        remaining = remaining.slice(chunk.length);
-      } else if (seg.text.startsWith(remaining)) {
-        chunk = remaining;
-        remaining = '';
-      } else {
-        const idx = remaining.indexOf(seg.text);
-        if (idx === 0) {
-          chunk = seg.text;
-          remaining = remaining.slice(chunk.length);
-        } else if (idx > 0) {
-          continue;
-        } else {
-          const overlap = seg.text.slice(0, remaining.length);
-          if (remaining.startsWith(overlap)) {
-            chunk = remaining;
-            remaining = '';
-          } else {
-            continue;
-          }
-        }
-      }
-
-      if (!chunk) continue;
-
-      const style = seg.bold && seg.italic ? 'bolditalic' : seg.bold ? 'bold' : seg.italic ? 'italic' : 'normal';
-      doc.setFont('helvetica', style);
-      if (seg.italic && !seg.bold) {
-        doc.setTextColor(85, 85, 85);
-      } else {
-        doc.setTextColor(26, 26, 26);
-      }
-      doc.text(chunk, lineX, y);
-      lineX += doc.getTextWidth(chunk);
+    for (let i = 0; i < line.length; i++) {
+      if (i > 0) lineX += spaceWidth;
+      setSegmentStyle(doc, line[i]);
+      doc.text(line[i].text, lineX, y);
+      lineX += doc.getTextWidth(line[i].text);
     }
 
     y += lineHeight;
