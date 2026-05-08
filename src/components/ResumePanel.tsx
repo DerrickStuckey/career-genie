@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { downloadTextFile } from '@/lib/export';
+import { generateResumeDocx, openResumePrintView, downloadBlob } from '@/lib/resume-export';
 
 interface ResumePanelProps {
   resumeText: string;
@@ -11,15 +12,30 @@ interface ResumePanelProps {
 
 export function ResumePanel({ resumeText, updatedResumeMarkdown }: ResumePanelProps) {
   const [showOriginal, setShowOriginal] = useState(false);
+  const [generatingDocx, setGeneratingDocx] = useState(false);
   const hasUpdated = updatedResumeMarkdown.trim().length > 0;
 
   if (!resumeText.trim() && !hasUpdated) {
     return <p className="text-sm text-stone-500">No resume uploaded.</p>;
   }
 
-  function handleDownloadResume() {
+  function handleDownloadMd() {
     const content = updatedResumeMarkdown || resumeText;
     downloadTextFile(content, 'resume.md');
+  }
+
+  async function handleDownloadDocx() {
+    setGeneratingDocx(true);
+    try {
+      const blob = await generateResumeDocx(updatedResumeMarkdown);
+      downloadBlob(blob, 'resume.docx');
+    } finally {
+      setGeneratingDocx(false);
+    }
+  }
+
+  function handlePrintPdf() {
+    openResumePrintView(updatedResumeMarkdown);
   }
 
   if (!hasUpdated) {
@@ -37,12 +53,27 @@ export function ResumePanel({ resumeText, updatedResumeMarkdown }: ResumePanelPr
         >
           {showOriginal ? 'Show updated' : 'Show original'}
         </button>
-        <button
-          onClick={handleDownloadResume}
-          className="text-xs px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          Download Resume (.md)
-        </button>
+        <div className="flex gap-1">
+          <button
+            onClick={handleDownloadMd}
+            className="text-xs px-2.5 py-1 border border-stone-300 text-stone-600 rounded hover:bg-stone-100"
+          >
+            .md
+          </button>
+          <button
+            onClick={handleDownloadDocx}
+            disabled={generatingDocx}
+            className="text-xs px-2.5 py-1 border border-stone-300 text-stone-600 rounded hover:bg-stone-100 disabled:opacity-50"
+          >
+            {generatingDocx ? '...' : '.docx'}
+          </button>
+          <button
+            onClick={handlePrintPdf}
+            className="text-xs px-2.5 py-1 border border-stone-300 text-stone-600 rounded hover:bg-stone-100"
+          >
+            PDF
+          </button>
+        </div>
       </div>
 
       {showOriginal ? (

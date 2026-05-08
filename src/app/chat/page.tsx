@@ -25,9 +25,9 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState('');
   const [activePanel, setActivePanel] = useState<'answers' | 'rankings' | 'resume' | null>(null);
   const [resumeJustUpdated, setResumeJustUpdated] = useState(false);
-  const [formattingResume, setFormattingResume] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
+  const formattingCompleteRef = useRef(false);
 
   const systemPrompt = buildChatSystemPrompt(
     state.questionResponses,
@@ -102,6 +102,14 @@ export default function ChatPage() {
 
         const toolResultMessages: ChatMessageType[] = [];
         for (const tc of toolCalls) {
+          if (tc.name === 'update_resume' && !formattingCompleteRef.current) {
+            toolResultMessages.push({
+              role: 'user',
+              content: 'Resume formatting is still in progress. Please wait a moment and try again.',
+              toolResult: { toolUseId: tc.id },
+            });
+            continue;
+          }
           const result = executeToolCall(tc, currentRankings);
           if (result.newRankings) {
             dispatch({
@@ -150,34 +158,40 @@ export default function ChatPage() {
     }
   }
 
-  async function initializeChat() {
-    setFormattingResume(true);
-    if (state.resumeText.trim() && !state.updatedResumeMarkdown) {
-      try {
-        let formatted = '';
-        const fastModel = state.provider === 'anthropic'
-          ? ANTHROPIC_FAST_MODEL
-          : OPENAI_FAST_MODEL;
-        for await (const event of sendMessage({
-          provider: state.provider,
-          apiKey: state.apiKey,
-          systemPrompt: RESUME_FORMATTING_SYSTEM_PROMPT,
-          messages: [{ role: 'user' as const, content: state.resumeText }],
-          maxTokens: 4096,
-          model: fastModel,
-        })) {
-          if (event.type === 'text') {
-            formatted += event.text;
-          }
+  async function formatResumeInBackground() {
+    try {
+      let formatted = '';
+      const fastModel = state.provider === 'anthropic'
+        ? ANTHROPIC_FAST_MODEL
+        : OPENAI_FAST_MODEL;
+      for await (const event of sendMessage({
+        provider: state.provider,
+        apiKey: state.apiKey,
+        systemPrompt: RESUME_FORMATTING_SYSTEM_PROMPT,
+        messages: [{ role: 'user' as const, content: state.resumeText }],
+        maxTokens: 4096,
+        model: fastModel,
+      })) {
+        if (event.type === 'text') {
+          formatted += event.text;
         }
-        if (formatted.trim()) {
-          dispatch({ type: 'SET_UPDATED_RESUME_MARKDOWN', updatedResumeMarkdown: formatted });
-        }
-      } catch (error) {
-        console.warn('Resume formatting failed:', error);
       }
+      if (formatted.trim()) {
+        dispatch({ type: 'SET_UPDATED_RESUME_MARKDOWN', updatedResumeMarkdown: formatted });
+      }
+    } catch (error) {
+      console.warn('Background resume formatting failed:', error);
+    } finally {
+      formattingCompleteRef.current = true;
     }
-    setFormattingResume(false);
+  }
+
+  function initializeChat() {
+    if (state.resumeText.trim() && !state.updatedResumeMarkdown) {
+      formatResumeInBackground();
+    } else {
+      formattingCompleteRef.current = true;
+    }
     runChatTurn([]);
   }
 
@@ -306,9 +320,6 @@ export default function ChatPage() {
                 </div>
               );
             })}
-          {formattingResume && (
-            <p className="text-center text-sm text-stone-400 py-8">Preparing your resume...</p>
-          )}
           {streaming && streamingContent && (
             <ChatMessage message={{ role: 'assistant', content: streamingContent }} />
           )}
